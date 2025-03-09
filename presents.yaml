@@ -1,0 +1,409 @@
+openapi: 3.0.1
+info:
+  title: Present List API
+  description: API for managing users, lists, presents, and their relationships.
+  version: 1.0.0
+servers:
+  - url: 'http://cs3103.cs.unb.ca:8010'
+    description: Production server
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      required:
+        - Email
+        - First
+        - Last
+        - Password
+      properties:
+        Email:
+          type: string
+          example: test@example.com
+        First:
+          type: string
+          example: Test1
+        Last:
+          type: string
+          example: Test2
+        Password:
+          type: string
+          example: test3
+    List:
+      type: object
+      required:
+        - name
+        - occasion
+      properties:
+        name:
+          type: string
+          example: list1
+        occasion:
+          type: string
+          example: new year
+    Present:
+      type: object
+      required:
+        - presentName
+        - description
+        - status
+        - priority
+      properties:
+        presentName:
+          type: string
+          example: p1
+        description:
+          type: string
+          example: Sample present
+        status:
+          type: integer
+          example: 1
+        priority:
+          type: integer
+          example: 1
+
+paths:
+  /:
+    get:
+      summary: Get all users
+      operationId: getAllUsers
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+              examples:
+                application/json:
+                  users:
+                    - Email: test@example.com
+                      First: Test1
+                      Last: Test2
+                      Password: test3
+        '500':
+          description: Server error
+
+    post:
+      summary: Create a new user
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uri:
+                    type: string
+                    example: '/users/123'
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+
+  /users/{userID}:
+    get:
+      summary: Get user by ID
+      operationId: getUserByID
+      parameters:
+        - in: path
+          name: userID
+          required: true
+          schema:
+            type: integer
+            example: 1
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+        '500':
+          description: Server error
+
+    post:
+      summary: Update user details
+      operationId: updateUser
+      parameters:
+        - in: path
+          name: userID
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User updated
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+
+    delete:
+      summary: Delete a user by ID
+      operationId: deleteUser
+      parameters:
+        - in: path
+          name: userID
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '204':
+          description: User deleted successfully
+        '404':
+          description: User not found
+        '500':
+          description: Server error
+
+  /presentLists:
+    get:
+      summary: Get all present lists
+      operationId: getAllLists
+      responses:
+        '200':
+          description: A list of present lists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/List'
+        '500':
+          description: Server error
+
+    post:
+      summary: Create a new present list
+      operationId: createList
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/List'
+      responses:
+        '201':
+          description: List created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uri:
+                    type: string
+                    example: '/presentLists/1'
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+
+  /presentLists/{listID}:
+    get:
+      summary: Get present list by ID
+      operationId: getListByID
+      parameters:
+        - in: path
+          name: listID
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Present list details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/List'
+        '404':
+          description: List not found
+        '500':
+          description: Server error
+
+    post:
+      summary: Update present list details
+      operationId: updateList
+      parameters:
+        - in: path
+          name: listID
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/List'
+      responses:
+        '201':
+          description: List updated
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+
+    delete:
+      summary: Delete a present list by ID
+      operationId: deleteList
+      parameters:
+        - in: path
+          name: listID
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '204':
+          description: List deleted successfully
+        '404':
+          description: List not found
+        '500':
+          description: Server error
+
+  /presents:
+    get:
+      summary: Get all presents
+      operationId: getAllPresents
+      responses:
+        '200':
+          description: A list of presents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Present'
+        '500':
+          description: Server error
+
+    post:
+      summary: Create a new present
+      operationId: createPresent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Present'
+      responses:
+        '201':
+          description: Present created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uri:
+                    type: string
+                    example: '/presents/1'
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+
+  /presents/{presentID}:
+    get:
+      summary: Get present by ID
+      operationId: getPresentByID
+      parameters:
+        - in: path
+          name: presentID
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Present details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Present'
+        '404':
+          description: Present not found
+        '500':
+          description: Server error
+
+    post:
+      summary: Update present details
+      operationId: updatePresent
+      parameters:
+        - in: path
+          name: presentID
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Present'
+      responses:
+        '201':
+          description: Present updated
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+
+    delete:
+      summary: Delete a present by ID
+      operationId: deletePresent
+      parameters:
+        - in: path
+          name: presentID
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '204':
+          description: Present deleted successfully
+        '404':
+          description: Present not found
+        '500':
+          description: Server error
+
+security:
+  - BearerAuth: []
