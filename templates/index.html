@@ -8,16 +8,26 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
-  <!-- The above 2 meta tags *must* come first in the head; any other head content must
-    come *after* these tags -->
-  <title>INFO3103 Term Project</title>
+  <title>Register - INFO3103 Term Project</title>
 </head>
 
 <body class="d-flex align-items-center justify-content-center vh-100 bg-light">
 
   <div class="card shadow-sm p-4" style="max-width: 400px; width: 100%;">
-    <h3 class="text-center mb-3">Login</h3>
-    <form id="loginForm">
+    <h3 class="text-center mb-3">Register</h3>
+    <form id="registerForm">
+      <div class="mb-3">
+        <label for="firstname" class="form-label">First Name</label>
+        <input type="text" class="form-control" id="firstname" required>
+      </div>
+      <div class="mb-3">
+        <label for="lastname" class="form-label">Last Name</label>
+        <input type="text" class="form-control" id="lastname" required>
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" required>
+      </div>
       <div class="mb-3">
         <label for="username" class="form-label">Username</label>
         <input type="text" class="form-control" id="username" required>
@@ -26,30 +36,36 @@
         <label for="password" class="form-label">Password</label>
         <input type="password" class="form-control" id="password" required>
       </div>
-      <button type="submit" class="btn btn-primary w-100">Login</button>
+      <button type="submit" class="btn btn-primary w-100">Register</button>
     </form>
+    <p class="text-center mt-3">Already have an account? <a href="/login">Login Here</a></p>
   </div>
 
   <script>
-    document.getElementById("loginForm").addEventListener("submit", function (event) {
+    document.getElementById("registerForm").addEventListener("submit", function (event) {
       event.preventDefault(); // Prevent default form submission
 
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+      const userData = {
+        first: document.getElementById("firstname").value,
+        last: document.getElementById("lastname").value,
+        email: document.getElementById("email").value,
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value
+      };
 
-      fetch("/signin", {
+      fetch("/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(userData),
         credentials: "include"
       })
         .then(response => response.json())
         .then(data => {
           if (data.status === "success") {
-            alert("Login successful!");
-            window.location.href = "/index"; // Redirect if needed
+            alert("Registration successful!");
+            window.location.href = "/login"; // Redirect to login page
           } else {
-            alert("Login failed!");
+            alert("Registration failed: " + data.message);
           }
         })
         .catch(error => console.error("Error:", error));

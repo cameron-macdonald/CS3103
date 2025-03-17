@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 import sys
 from flask import Flask, jsonify, abort, request, make_response, session
-from flask_restful import reqparse, Resource, Api
+from flask_restful import reqparse, abort, Resource, Api
 from flask_session import Session
 import json
+import pymysql.err
 from ldap3 import Server, Connection, ALL
 from ldap3.core.exceptions import *
 import ssl #include ssl libraries
 
 import settings # Our server and db settings, stored in settings.py
 from flask import render_template
+from db_util import db_access
 
 app = Flask(__name__)
 # Set Server-side session config: Save sessions in the local app directory.
@@ -21,11 +23,9 @@ Session(app)
 
 
 ####################################################################################
-#Routing: to home (login) page
+#Routing: to home (register) page
 @app.route('/')
-def home():
-    if 'username' in session:  # If already logged in
-        return render_template('dashboard.html', username=session['username'])
+def register():
     return render_template('index.html')
 
 ####################################################################################
@@ -35,7 +35,11 @@ def dashboard():
     if 'username' in session:
         return render_template('dashboard.html', username=session['username'])
     else:
-        return redirect(url_for('home'))  # Make sure 'home' is a valid route
+        return render_template('index.html')  # Make sure 'home' is a valid route
+####################################################################################
+@app.route('/login')
+def home():
+    return render_template('login.html')
 ####################################################################################
 #
 # Error handlers
@@ -52,6 +56,45 @@ def not_found(error):
 #
 # Routing: GET and POST using Flask-Session
 #
+
+
+class User(Resource):
+    def post(self):
+        if not request.json or 'email' not in request.json:
+            abort(400, message="Missing required fields")  # Bad request
+
+        # Extract fields from JSON request
+        email = request.json.get('email')
+        first = request.json.get('first')
+        last = request.json.get('last')
+        username = request.json.get('username')
+        password = request.json.get('password')
+
+        sqlProc = 'addUser'
+        sqlArgs = [email, first, last, username, password]  # Pass username as well
+
+        try:
+            result = db_access(sqlProc, sqlArgs)  
+            user_id = result[0]  # Extract the user ID
+            return make_response(jsonify({"status": "success", "user_id": user_id}), 201)
+        except Exception as e:
+            abort(500, message="Error: please try again")  # Catch any other errors
+
+
+
+class OtherUser(Resource):
+	# Example request: curl http://cs3103.cs.unb.ca:8010/users/email/first/last/date
+	def get(self, email, first, last, date):
+		sqlProc = 'getUserBy'
+		sqlArgs = [email, first, last, date,]
+		try:
+			rows = db_access(sqlProc, sqlArgs)
+		except Exception as e:
+			abort(500, message = e) # server error
+		return make_response(jsonify({'users': rows}), 200) # turn set into json and return it	
+
+
+
 class SignIn(Resource):
 	#
 	# Set Session and return Cookie
@@ -143,6 +186,7 @@ class SignIn(Resource):
 #
 api = Api(app)
 api.add_resource(SignIn, '/signin')
+api.add_resource(User, '/user')
 
 
 #############################################################################

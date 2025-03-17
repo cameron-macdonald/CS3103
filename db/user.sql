@@ -31,13 +31,27 @@ DELIMITER ;
 
 -- Add a user
 DELIMITER //
+
 DROP PROCEDURE IF EXISTS addUser //
-CREATE PROCEDURE addUser(IN emailAdressIn VARCHAR(255), IN firstNameIn VARCHAR(255), IN lastNameIn VARCHAR(255), IN passwordIn VARCHAR(255))
+
+CREATE PROCEDURE addUser(
+    IN emailAdressIn VARCHAR(255), 
+    IN firstNameIn VARCHAR(255), 
+    IN lastNameIn VARCHAR(255), 
+    IN usernameIn VARCHAR(255),
+    IN passwordIn VARCHAR(255)
+)
 BEGIN
-    INSERT INTO users (emailAdress, firstName, lastName, password, dateCreated)
-    VALUES (emailAdressIn, firstNameIn, lastNameIn, passwordIn, NOW());
+    INSERT INTO users (emailAdress, firstName, lastName, username, password, dateCreated)
+    VALUES (emailAdressIn, firstNameIn, lastNameIn, usernameIn, passwordIn, NOW());
+
+    SELECT LAST_INSERT_ID() as id;  -- Return the newly created user ID
 END //
+
 DELIMITER ;
+
+
+
 
 -- Delete a user
 DELIMITER //
