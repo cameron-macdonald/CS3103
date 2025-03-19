@@ -7,38 +7,40 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-
+  <link rel="stylesheet" type="text/css" href="static/css/styles.css">
   <title>Register - INFO3103 Term Project</title>
 </head>
 
-<body class="d-flex align-items-center justify-content-center vh-100 bg-light">
+<body class="bg-light">
 
-  <div class="card shadow-sm p-4" style="max-width: 400px; width: 100%;">
-    <h3 class="text-center mb-3">Register</h3>
-    <form id="registerForm">
-      <div class="mb-3">
-        <label for="firstname" class="form-label">First Name</label>
-        <input type="text" class="form-control" id="firstname" required>
-      </div>
-      <div class="mb-3">
-        <label for="lastname" class="form-label">Last Name</label>
-        <input type="text" class="form-control" id="lastname" required>
-      </div>
-      <div class="mb-3">
-        <label for="email" class="form-label">Email</label>
-        <input type="email" class="form-control" id="email" required>
-      </div>
-      <div class="mb-3">
-        <label for="username" class="form-label">Username</label>
-        <input type="text" class="form-control" id="username" required>
-      </div>
-      <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" required>
-      </div>
-      <button type="submit" class="btn btn-primary w-100">Register</button>
-    </form>
-    <p class="text-center mt-3">Already have an account? <a href="/login">Login Here</a></p>
+  <div class="container full-height">
+    <div class="card text-center">
+      <h3 class="text-center mb-3">Register</h3>
+      <form id="registerForm">
+        <div class="mb-3">
+          <label for="firstname" class="form-label">First Name</label>
+          <input type="text" class="form-control" id="firstname" required>
+        </div>
+        <div class="mb-3">
+          <label for="lastname" class="form-label">Last Name</label>
+          <input type="text" class="form-control" id="lastname" required>
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" class="form-control" id="email" required>
+        </div>
+        <div class="mb-3">
+          <label for="username" class="form-label">Username</label>
+          <input type="text" class="form-control" id="username" required>
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+      </form>
+      <p class="text-center mt-3">Already have an account? <a href="/login">Login Here</a></p>
+    </div>
   </div>
 
   <script>

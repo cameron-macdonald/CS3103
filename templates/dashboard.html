@@ -1,43 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-      
-        <!-- The above 2 meta tags *must* come first in the head; any other head content must
-          come *after* these tags -->
-        <title>CS3103 Term Project Dashboard</title>
-      </head>
-      
-<body class="container">
-    <h2 class="mt-5">Welcome, {{ username }}!</h2>
-    <p>You have successfully logged in.</p>
-    <a href="/settings" class="btn btn-primary">Settings</a>
-    <button type="submit" id="logout-btn" class="btn btn-danger">Logout</button>
 
-    <script>
-      document.getElementById("logout-btn").addEventListener("click", function (event) {
-  
-        fetch("/Auth/Logout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include"
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+  <!-- The above 2 meta tags *must* come first in the head; any other head content must
+          come *after* these tags -->
+  <title>CS3103 Term Project Dashboard</title>
+</head>
+
+<body class="bg-light">
+
+  <div class="container full-height">
+    <div class="card text-center">
+      <h2 class="mt-5">Welcome, {{ username }}!</h2>
+      <p>You have successfully logged in.</p>
+      <a href="/settings" class="btn btn-primary">Settings</a>
+      <button type="submit" id="logout-btn" class="btn btn-danger">Logout</button>
+    </div>
+  </div>
+  <script>
+    document.getElementById("logout-btn").addEventListener("click", function (event) {
+
+      fetch("/Auth/Logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === "success") {
+            alert("Logout successful!");
+            window.location.href = "/login"; // Redirect if needed
+          } else {
+            alert("Logout failed!");
+          }
         })
-          .then(response => response.json())
-          .then(data => {
-            if (data.status === "success") {
-              alert("Logout successful!");
-              window.location.href = "/login"; // Redirect if needed
-            } else {
-              alert("Logout failed!");
-            }
-          })
-          .catch(error => console.error("Error:", error));
-      });
-    </script>
+        .catch(error => console.error("Error:", error));
+    });
+  </script>
 
 </body>
+
 </html>
