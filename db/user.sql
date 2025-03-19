@@ -1,4 +1,4 @@
--- Get all users
+-- Get all users (DONE)
 DELIMITER //
 DROP PROCEDURE IF EXISTS getUsers //
 CREATE PROCEDURE getUsers()
@@ -7,7 +7,7 @@ BEGIN
 END //
 DELIMITER ;
 
--- Get user by ID
+-- Get user by ID (DONE)
 DELIMITER //
 DROP PROCEDURE IF EXISTS getUserByID //
 CREATE PROCEDURE getUserByID(IN userIDIn INT)
@@ -16,20 +16,29 @@ BEGIN
 END //
 DELIMITER ;
 
--- Get users by optional parameters
+-- Get users by optional parameters(DONE)
 DELIMITER //
+
 DROP PROCEDURE IF EXISTS getUsersBy //
-CREATE PROCEDURE getUsersBy(IN firstNameIn VARCHAR(255), IN lastNameIn VARCHAR(255), IN emailAdressIn VARCHAR(255), IN dateCreatedIn DATE)
+
+CREATE PROCEDURE getUsersBy(
+    IN firstNameIn VARCHAR(255), 
+    IN lastNameIn VARCHAR(255), 
+    IN emailAdressIn VARCHAR(255), 
+    IN dateCreatedIn DATE
+)
 BEGIN
     SELECT * FROM users
-    WHERE (firstName = firstNameIn OR firstNameIn IS NULL)
-    AND (lastName = lastNameIn OR lastNameIn IS NULL)
-    AND (emailAdress = emailAdressIn OR emailAdressIn IS NULL)
+    WHERE (firstName = firstNameIn OR firstNameIn IS NULL OR firstNameIn = '')
+    AND (lastName = lastNameIn OR lastNameIn IS NULL OR lastNameIn = '')
+    AND (emailAdress = emailAdressIn OR emailAdressIn IS NULL OR emailAdressIn = '')
     AND (dateCreated = dateCreatedIn OR dateCreatedIn IS NULL);
 END //
+
 DELIMITER ;
 
--- Add a user
+
+-- Add a user (DONE)
 DELIMITER //
 
 DROP PROCEDURE IF EXISTS addUser //
@@ -50,10 +59,7 @@ END //
 
 DELIMITER ;
 
-
-
-
--- Delete a user
+-- Delete a user (DONE)
 DELIMITER //
 DROP PROCEDURE IF EXISTS deleteUser //
 CREATE PROCEDURE deleteUser(IN userIDIn INT)

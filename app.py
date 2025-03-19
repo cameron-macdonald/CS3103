@@ -80,7 +80,51 @@ class User(Resource):
             return make_response(jsonify({"status": "success", "user_id": user_id}), 201)
         except Exception as e:
             abort(500, message="Error: please try again")  # Catch any other errors
+	
+    def get(self, id=None):
+        if id is None:
+            sqlProc = "getUsers"
+            sqlArgs = []
+        else:
+            sqlProc = "getUserById"
+            sqlArgs = [id]
+        try:
+            rows = db_access(sqlProc, sqlArgs)  # Fetch users from DB
 
+            for row in rows:
+                row.pop("password", None)  # Removes 'password' key if it exists
+
+        except Exception as e:
+            abort(500, message=str(e))  # Return server error
+
+        return make_response(jsonify({'users': rows}), 200)  # Return JSON response
+
+    def delete(self, id):
+        # Ensure user is logged in
+        if 'user_id' not in session:
+            abort(401, message="Unauthorized: Please log in")  # 401 Unauthorized
+		
+        if id is None:
+            abort(400, message="User ID is required")  # Bad request
+
+        # Ensure the user can only delete their own account
+        if int(id) != session['user_id']:
+            abort(403, message="Forbidden: You can only delete your own account") 
+
+        sqlProc = "deleteUser"  # Stored procedure to delete a user
+        sqlArgs = [id]
+
+        try:
+            result = db_access(sqlProc, sqlArgs)  # Call DB function
+
+            if result is None or result == 0:  # Check if user existed
+                abort(404, message="User not found")  # Not found
+
+            return make_response(jsonify({"status": "success", "message": "User deleted"}), 200)
+
+        except Exception as e:
+            abort(500, message=str(e))  # Server error
+			
 class Login(Resource):
     def post(self):
         if not request.json or 'username' not in request.json or 'password' not in request.json:
@@ -141,7 +185,7 @@ class Logout(Resource):
 api = Api(app)
 api.add_resource(Login, '/Auth/Login')
 api.add_resource(Logout, '/Auth/Logout')
-api.add_resource(User, '/user')
+api.add_resource(User, "/user", "/user/<int:id>")
 
 
 #############################################################################
