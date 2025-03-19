@@ -4,9 +4,8 @@ from flask import Flask, jsonify, abort, request, make_response, session
 from flask_restful import reqparse, abort, Resource, Api
 from flask_session import Session
 import json
+import bcrypt
 import pymysql.err
-from ldap3 import Server, Connection, ALL
-from ldap3.core.exceptions import *
 import ssl #include ssl libraries
 
 import settings # Our server and db settings, stored in settings.py
@@ -57,10 +56,9 @@ def not_found(error):
 # Routing: GET and POST using Flask-Session
 #
 
-
 class User(Resource):
     def post(self):
-        if not request.json or 'email' not in request.json:
+        if not request.json or 'email' not in request.json or 'password' not in request.json:
             abort(400, message="Missing required fields")  # Bad request
 
         # Extract fields from JSON request
@@ -70,8 +68,11 @@ class User(Resource):
         username = request.json.get('username')
         password = request.json.get('password')
 
+        # Hash the password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
         sqlProc = 'addUser'
-        sqlArgs = [email, first, last, username, password]  # Pass username as well
+        sqlArgs = [email, first, last, username, hashed_password]  # Store the hashed password
 
         try:
             result = db_access(sqlProc, sqlArgs)  
@@ -80,103 +81,44 @@ class User(Resource):
         except Exception as e:
             abort(500, message="Error: please try again")  # Catch any other errors
 
-
-
-class OtherUser(Resource):
-	# Example request: curl http://cs3103.cs.unb.ca:8010/users/email/first/last/date
-	def get(self, email, first, last, date):
-		sqlProc = 'getUserBy'
-		sqlArgs = [email, first, last, date,]
-		try:
-			rows = db_access(sqlProc, sqlArgs)
-		except Exception as e:
-			abort(500, message = e) # server error
-		return make_response(jsonify({'users': rows}), 200) # turn set into json and return it	
-
-
-
 class SignIn(Resource):
-	#
-	# Set Session and return Cookie
-	#
-	# Example curl command:
-	# curl -i -H "Content-Type: application/json" -X POST -d '{"username": "Casper", "password": "crap"}'
-	#  	-c cookie-jar -k https://cs3103.cs.unb.ca:61340/signin
-	#
-	def post(self):
+    def post(self):
+        if not request.json or 'username' not in request.json or 'password' not in request.json:
+            abort(400, message="Missing required fields")
 
-		if not request.json:
-			abort(400) # bad request
+        username = request.json.get('username')
+        entered_password = request.json.get('password')
+        date_created = request.json.get('dateCreated', None)
+		
+        # Retrieve stored hashed password from the database
+        sqlProc = 'getUsersBy'  
+        sqlArgs = [
+			'',
+			'',
+			'',
+			username,
+			date_created if date_created else None
+		]
 
-		# Parse the json
-		parser = reqparse.RequestParser()
-		try:
- 			# Check for required attributes in json document, create a dictionary
-			parser.add_argument('username', type=str, required=True)
-			parser.add_argument('password', type=str, required=True)
-			request_params = parser.parse_args()
-		except:
-			abort(400) # bad request
+        try:
+            result = db_access(sqlProc, sqlArgs)  # Fetch user data
+            if not result:
+                abort(401, message="Invalid username or password")  # Unauthorized
 
-		if request_params['username'] in session:
-			return redirect(url_for('dashboard')) #Redirect if already logged in
+            stored_hashed_password = result[0]['password'] # Assuming password is the first field
 
-		try:
-			ldapServer = Server(host=settings.LDAP_HOST)
-			ldapConnection = Connection(ldapServer,
-				raise_exceptions=True,
-				user='uid='+request_params['username']+', ou=People,ou=fcs,o=unb',
-				password = request_params['password'])
-			ldapConnection.open()
-			ldapConnection.start_tls()
-			ldapConnection.bind()
-			# At this point we have sucessfully authenticated.
-			session['username'] = request_params['username']
-			return redirect(url_for('dashboard'))  # Redirect after successful login
+            # Verify password
+            if bcrypt.checkpw(entered_password.encode('utf-8'), stored_hashed_password.encode('utf-8')):
+				
+                session['username'] = username
+                session['logged_in'] = True
 
-		except LDAPException:
-			response = {'status': 'Access denied'}
-			responseCode = 403
-		finally:
-			ldapConnection.unbind()
+                return make_response(jsonify({"status": "success", "message": "Login successful"}), 200)
+            else:
+                abort(401, message="Invalid username or password")  # Unauthorized
 
-		return make_response(jsonify(response), responseCode)
-
-	# GET: Check Cookie data with Session data
-	#
-	# Example curl command:
-	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar
-	#	-k https://cs3103.cs.unb.ca:61340/signin
-	def get(self):
-		success = False
-		if 'username' in session:
-			username = session['username']
-			response = {'status': 'success'}
-			responseCode = 200
-		else:
-			response = {'status': 'fail'}
-			responseCode = 403
-
-		return make_response(jsonify(response), responseCode)
-
-	# DELETE: Check Cookie data with Session data
-	#
-	# Example curl command:
-	# curl -i -H "Content-Type: application/json" -X DELETE -b cookie-jar
-	#	-k https://info3103.cs.unb.ca:61340/signin
-
-	def delete(self):
-		if 'username' in session:
-			session.pop('username')
-			response = {'status': 'successfully logged out'}
-			return response, 200
-		else:
-			response = {'status': 'fail'}
-			responseCode = 403
-
-		return make_response(jsonify(response), responseCode)
-
-
+        except Exception as e:
+            abort(500, message="Error: please try again")  # Catch any other errors
 
 
 
