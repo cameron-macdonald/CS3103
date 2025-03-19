@@ -15,6 +15,28 @@
 <body class="container">
     <h2 class="mt-5">Welcome, {{ username }}!</h2>
     <p>You have successfully logged in.</p>
-    <a href="/logout" class="btn btn-danger">Logout</a>
+    <button type="submit" id="logout-btn" class="btn btn-danger">Logout</button>
+
+    <script>
+      document.getElementById("logout-btn").addEventListener("click", function (event) {
+  
+        fetch("/Auth/Logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include"
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === "success") {
+              alert("Logout successful!");
+              window.location.href = "/login"; // Redirect if needed
+            } else {
+              alert("Logout failed!");
+            }
+          })
+          .catch(error => console.error("Error:", error));
+      });
+    </script>
+
 </body>
 </html>

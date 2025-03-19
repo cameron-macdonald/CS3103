@@ -34,7 +34,7 @@ def dashboard():
     if 'username' in session:
         return render_template('dashboard.html', username=session['username'])
     else:
-        return render_template('index.html')  # Make sure 'home' is a valid route
+        return render_template('login.html')  # Make sure 'home' is a valid route
 ####################################################################################
 @app.route('/login')
 def home():
@@ -81,7 +81,7 @@ class User(Resource):
         except Exception as e:
             abort(500, message="Error: please try again")  # Catch any other errors
 
-class SignIn(Resource):
+class Login(Resource):
     def post(self):
         if not request.json or 'username' not in request.json or 'password' not in request.json:
             abort(400, message="Missing required fields")
@@ -106,10 +106,11 @@ class SignIn(Resource):
                 abort(401, message="Invalid username or password")  # Unauthorized
 
             stored_hashed_password = result[0]['password'] # Assuming password is the first field
+            user_id = result[0]['userID'] # Assuming password is the first field
 
             # Verify password
             if bcrypt.checkpw(entered_password.encode('utf-8'), stored_hashed_password.encode('utf-8')):
-				
+                session['user_id'] = user_id
                 session['username'] = username
                 session['logged_in'] = True
 
@@ -120,6 +121,17 @@ class SignIn(Resource):
         except Exception as e:
             abort(500, message="Error: please try again")  # Catch any other errors
 
+class Logout(Resource):
+    def post(self):
+        if 'username' not in session:
+            abort(400, message="Error: Cannot Log Out")
+
+        try:
+            session.clear()  # Properly deletes all session data
+            return make_response(jsonify({"status": "success", "message": "Logout successful"}), 200)
+
+        except Exception as e:
+            abort(500, message="Error: please try again")  # Catch any other errors
 
 
 ####################################################################################
@@ -127,7 +139,8 @@ class SignIn(Resource):
 # Identify/create endpoints and endpoint objects
 #
 api = Api(app)
-api.add_resource(SignIn, '/signin')
+api.add_resource(Login, '/Auth/Login')
+api.add_resource(Logout, '/Auth/Logout')
 api.add_resource(User, '/user')
 
 
