@@ -3,66 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Present List</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        label, input, button { display: block; margin: 10px 0; }
-        select { margin-top: 5px; }
-    </style>
+    <title>My PresentLists</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
-<body>
+<body class="container mt-5">
     <h1>Manage Present List</h1>
-    
-    <h2>View Present Lists</h2>
-    <label for="occasionFilter">Filter by Occasion:</label>
-    <select id="occasionFilter">
-        <option value="">All Occasions</option>
-        <option value="Birthday">Birthday</option>
-        <option value="Christmas">Christmas</option>
-        <option value="Wedding">Wedding</option>
-        <option value="Other">Other</option>
-    </select>
-    <button id="viewPresentListsBtn">View Present Lists</button>
-    <ul id="presentLists"></ul>
-    
-    <h2>Delete Present List by ID</h2>
-    <form id="deletePresentListForm">
-        <label for="deletePresentListId">Present List ID:</label>
-        <input type="text" id="deletePresentListId" name="deletePresentListId" required>
-        <button type="submit">Delete Present List</button>
-    </form>
-    <p id="deleteListResponse"></p>
-    
-    <h2>Update Present List Contents</h2>
-    <form id="updatePresentListContentsForm">
-        <label for="updateListId">Present List ID:</label>
-        <input type="text" id="updateListId" name="updateListId" required>
-        
-        <label for="addPresentName">Add Present (Name):</label>
-        <input type="text" id="addPresentName" name="addPresentName">
-        
-        <label for="deletePresentName">Delete Present (Name):</label>
-        <input type="text" id="deletePresentName" name="deletePresentName">
-        
-        <button type="submit">Update Present List Contents</button>
-    </form>
-    <p id="updateContentsResponse"></p>
 
-    <h2>Update Present List Information</h2>
-    <form id="updatePresentListInfoForm">
-        <label for="updatePresentListId">Present List ID:</label>
-        <input type="text" id="updatePresentListId" name="updatePresentListId" required>
-        
-        <label for="updatePresentListName">New Present List Name (optional):</label>
-        <input type="text" id="updatePresentListName" name="updatePresentListName">
-        
-        <label for="updateOccasion">New Occasion (optional):</label>
-        <input type="text" id="updateOccasion" name="updateOccasion">
-        
-        <button type="submit">Update Present List Information</button>
-    </form>
-    <p id="updateInfoResponse"></p>
+    <div class="mb-3">
+        <h2>View Present Lists</h2>
+        <label for="occasionFilter" class="form-label">Filter by Occasion:</label>
+        <select id="occasionFilter" class="form-select">
+            <option value="">All Occasions</option>
+            <option value="Birthday">Birthday</option>
+            <option value="Christmas">Christmas</option>
+            <option value="Wedding">Wedding</option>
+            <option value="Other">Other</option>
+        </select>
+        <button id="viewPresentListsBtn" class="btn btn-primary">View Present Lists</button>
+        <ul id="presentLists"></ul>
+    </div>
     
+    <div class="mb-3">
+        <h2>Delete Present List by ID</h2>
+        <form id="deletePresentListForm">
+            <label for="deletePresentListId" class="form-label">Present List ID:</label>
+            <input type="text" id="deletePresentListId" class="form-control" name="deletePresentListId" required>
+            <button type="submit" class="btn btn-primary">Delete Present List</button>
+        </form>
+        <p id="deleteListResponse"></p>
+    </div>
+    <div class="mb-3">
+        <h2>Update Present List Contents</h2>
+        <form id="updatePresentListContentsForm">
+            <label for="updateListId" class="form-label">Present List ID:</label>
+            <input type="text" id="updateListId" class="form-control" name="updateListId" required>
+            
+            <label for="addPresentName" class="form-label">Add Present (Name):</label>
+            <input type="text" id="addPresentName" class="form-control" name="addPresentName">
+            
+            <label for="deletePresentName" class="form-label">Delete Present (Name):</label>
+            <input type="text" id="deletePresentName" class="form-control" name="deletePresentName">
+            
+            <button type="submit" class="btn btn-primary">Update Present List Contents</button>
+        </form>
+        <p id="updateContentsResponse"></p>
+    </div>
+    <div class="mb-3">
+        <h2>Update Present List Information</h2>
+        <form id="updatePresentListInfoForm">
+            <label for="updatePresentListId" class="form-label">Present List ID:</label>
+            <input type="text" id="updatePresentListId" class="form-control" name="updatePresentListId" required>
+            
+            <label for="updatePresentListName" class="form-label">New Present List Name (optional):</label>
+            <input type="text" id="updatePresentListName" class="form-control" name="updatePresentListName">
+            
+            <label for="updateOccasion" class="form-label">New Occasion (optional):</label>
+            <input type="text" id="updateOccasion" class="form-control" name="updateOccasion">
+            
+            <button type="submit" class="btn btn-primary">Update Present List Information</button>
+        </form>
+        <p id="updateInfoResponse"></p>
+    </div>
     <script>
         document.getElementById('viewPresentListsBtn').addEventListener('click', function() {
             const occasionFilter = document.getElementById('occasionFilter').value;
