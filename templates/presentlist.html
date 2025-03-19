@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Present List</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        label, input, button { display: block; margin: 10px 0; }
+        select { margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Manage Present List</h1>
+    
+    <h2>View Present Lists</h2>
+    <label for="occasionFilter">Filter by Occasion:</label>
+    <select id="occasionFilter">
+        <option value="">All Occasions</option>
+        <option value="Birthday">Birthday</option>
+        <option value="Christmas">Christmas</option>
+        <option value="Wedding">Wedding</option>
+        <option value="Other">Other</option>
+    </select>
+    <button id="viewPresentListsBtn">View Present Lists</button>
+    <ul id="presentLists"></ul>
+    
+    <h2>Delete Present List by ID</h2>
+    <form id="deletePresentListForm">
+        <label for="deletePresentListId">Present List ID:</label>
+        <input type="text" id="deletePresentListId" name="deletePresentListId" required>
+        <button type="submit">Delete Present List</button>
+    </form>
+    <p id="deleteListResponse"></p>
+    
+    <h2>Update Present List Contents</h2>
+    <form id="updatePresentListContentsForm">
+        <label for="updateListId">Present List ID:</label>
+        <input type="text" id="updateListId" name="updateListId" required>
+        
+        <label for="addPresentName">Add Present (Name):</label>
+        <input type="text" id="addPresentName" name="addPresentName">
+        
+        <label for="deletePresentName">Delete Present (Name):</label>
+        <input type="text" id="deletePresentName" name="deletePresentName">
+        
+        <button type="submit">Update Present List Contents</button>
+    </form>
+    <p id="updateContentsResponse"></p>
+
+    <h2>Update Present List Information</h2>
+    <form id="updatePresentListInfoForm">
+        <label for="updatePresentListId">Present List ID:</label>
+        <input type="text" id="updatePresentListId" name="updatePresentListId" required>
+        
+        <label for="updatePresentListName">New Present List Name (optional):</label>
+        <input type="text" id="updatePresentListName" name="updatePresentListName">
+        
+        <label for="updateOccasion">New Occasion (optional):</label>
+        <input type="text" id="updateOccasion" name="updateOccasion">
+        
+        <button type="submit">Update Present List Information</button>
+    </form>
+    <p id="updateInfoResponse"></p>
+    
+    <script>
+        document.getElementById('viewPresentListsBtn').addEventListener('click', function() {
+            const occasionFilter = document.getElementById('occasionFilter').value;
+            fetch(`/8013/present-lists?occasion=${occasionFilter}`)
+                .then(response => response.json())
+                .then(data => {
+                    const listContainer = document.getElementById('presentLists');
+                    listContainer.innerHTML = '';
+                    data.forEach(list => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${list.name} - ${list.occasion} (ID: ${list.id})`;
+                        listContainer.appendChild(listItem);
+                    });
+                })
+                .catch(error => alert('Error fetching present lists'));
+        });
+
+        document.getElementById('deletePresentListForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const listId = document.getElementById('deletePresentListId').value;
+            fetch(`/8013/present-lists/${listId}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => document.getElementById('deleteListResponse').innerText = `Present list with ID ${listId} deleted successfully.`)
+                .catch(error => document.getElementById('deleteListResponse').innerText = 'Error deleting present list');
+        });
+
+        document.getElementById('updatePresentListContentsForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const listId = document.getElementById('updateListId').value;
+            const addPresentName = document.getElementById('addPresentName').value;
+            const deletePresentName = document.getElementById('deletePresentName').value;
+            
+            const updateData = {};
+            if (addPresentName) updateData.addPresent = addPresentName;
+            if (deletePresentName) updateData.deletePresent = deletePresentName;
+            
+            fetch(`/8013/present-lists/${listId}/contents`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            })
+            .then(response => response.json())
+            .then(data => document.getElementById('updateContentsResponse').innerText = 'Present list contents updated successfully.')
+            .catch(error => document.getElementById('updateContentsResponse').innerText = 'Error updating present list contents');
+        });
+
+        document.getElementById('updatePresentListInfoForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const listId = document.getElementById('updatePresentListId').value;
+            const newListName = document.getElementById('updatePresentListName').value;
+            const newOccasion = document.getElementById('updateOccasion').value;
+            
+            const updateData = {};
+            if (newListName) updateData.name = newListName;
+            if (newOccasion) updateData.occasion = newOccasion;
+            
+            fetch(`/8013/present-lists/${listId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            })
+            .then(response => response.json())
+            .then(data => document.getElementById('updateInfoResponse').innerText = 'Present list information updated successfully.')
+            .catch(error => document.getElementById('updateInfoResponse').innerText = 'Error updating present list information');
+        });
+    </script>
+</body>
+</html>
