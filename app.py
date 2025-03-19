@@ -47,6 +47,13 @@ def settingsPage():
     else:
         return render_template('login.html')  # Make sure 'home' is a valid route
 ####################################################################################
+@app.route('/presentlist')
+def presentlistPage():
+    if 'username' in session:
+        return render_template('presentlist.html', username=session['username'])
+    else:
+        return render_template('login.html')  # Make sure 'home' is a valid route
+####################################################################################
 #
 # Error handlers
 #
@@ -132,6 +139,50 @@ class User(Resource):
         except Exception as e:
             abort(500, message=str(e))  # Server error
 
+    def put(self):
+        if 'user_id' not in session:
+            abort(401, message="Unauthorized: Please log in")
+
+        # Get the data from the request
+        user_id = session['user_id']
+        first_name = request.json.get('first_name')
+        last_name = request.json.get('last_name')
+        email = request.json.get('email')
+        old_password = request.json.get('old_password')
+        new_password = request.json.get('new_password')
+
+        # Fetch the user's current hashed password from the database
+        sqlProc = 'getUserById'  # Assuming you have a stored procedure that gets a user by ID
+        sqlArgs = [user_id]
+
+        try:
+            result = db_access(sqlProc, sqlArgs)
+            if not result:
+                abort(404, message="User not found")
+
+            current_hashed_password = result[0]['password']
+
+            # If a new password is provided, verify the old password
+            if new_password:
+                if not bcrypt.checkpw(old_password.encode('utf-8'), current_hashed_password.encode('utf-8')):
+                    abort(400, message="Old password is incorrect")
+                
+                # Hash the new password
+                new_hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            else:
+                new_hashed_password = current_hashed_password  # Keep the current password if no new password is provided
+
+            # Update the user's information
+            sqlProc = 'updateUser'  # Assuming you have a stored procedure for updating user
+            sqlArgs = [user_id, first_name, last_name, email, new_hashed_password]
+
+            db_access(sqlProc, sqlArgs)
+
+            return make_response(jsonify({"status": "success", "message": "User information updated"}), 200)
+
+        except Exception as e:
+            abort(500, message="Error updating user information: " + str(e))
+
 class Login(Resource):
     def post(self):
         if not request.json or 'username' not in request.json or 'password' not in request.json:
@@ -192,7 +243,8 @@ class Logout(Resource):
 api = Api(app)
 api.add_resource(Login, '/Auth/Login')
 api.add_resource(Logout, '/Auth/Logout')
-api.add_resource(User, "/user", "/user/<int:id>")
+api.add_resource(User, "/user", "/user/<int:id>", "/user/update")
+
 
 
 #############################################################################
