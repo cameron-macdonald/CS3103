@@ -24,21 +24,28 @@ Session(app)
 ####################################################################################
 #Routing: to home (register) page
 @app.route('/')
-def register():
+def registerPage():
     return render_template('index.html')
 
 ####################################################################################
 #Routing: to dashboard
 @app.route('/dashboard')
-def dashboard():
+def dashboardPage():
     if 'username' in session:
         return render_template('dashboard.html', username=session['username'])
     else:
         return render_template('login.html')  # Make sure 'home' is a valid route
 ####################################################################################
 @app.route('/login')
-def home():
+def homePage():
     return render_template('login.html')
+####################################################################################
+@app.route('/settings')
+def settingsPage():
+    if 'username' in session:
+        return render_template('settings.html', username=session['username'])
+    else:
+        return render_template('login.html')  # Make sure 'home' is a valid route
 ####################################################################################
 #
 # Error handlers
@@ -124,7 +131,7 @@ class User(Resource):
 
         except Exception as e:
             abort(500, message=str(e))  # Server error
-			
+
 class Login(Resource):
     def post(self):
         if not request.json or 'username' not in request.json or 'password' not in request.json:
