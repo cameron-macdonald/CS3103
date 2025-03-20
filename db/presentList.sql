@@ -36,14 +36,13 @@ BEGIN
     SELECT * 
     FROM presentlists
     NATURAL JOIN users
-    WHERE userID = userIDIn;
+    WHERE userID = userIDIn
+    AND (occasion = occasionIn OR occasionIn IS NULL)
+    AND (name = nameIn OR nameIn IS NULL)
+    AND (dateCreated = dateCreatedIn OR dateCreatedIn IS NULL);
     
 END //
 DELIMITER ;
-    --AND (occasion = occasionIn OR occasionIn IS NULL)
-    --AND (name = nameIn OR nameIn IS NULL)
-    --AND (dateCreated = dateCreatedIn OR dateCreatedIn IS NULL);
-
 
 
 -- Add a present list
