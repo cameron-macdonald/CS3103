@@ -13,11 +13,11 @@ CREATE TABLE users (
 DROP TABLE IF EXISTS presentlists;
 CREATE TABLE presentlists (
     presentListID INT AUTO_INCREMENT PRIMARY KEY,
-    user INT,
+    userID INT,
     name VARCHAR(255) NOT NULL,
     occasion VARCHAR(255),
     dateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user) REFERENCES users(userID) ON DELETE CASCADE
+    FOREIGN KEY (userID) REFERENCES users(userID) ON DELETE CASCADE
 );
 
 -- Present Table
