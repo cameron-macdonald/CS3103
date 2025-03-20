@@ -16,42 +16,55 @@ BEGIN
 END //
 DELIMITER ;
 
--- Get presents by userID andID
+-- Get present list by userID and listID
 DELIMITER //
 DROP PROCEDURE IF EXISTS getListByUserID //
-CREATE PROCEDURE getListByUserID(IN presentListIDIn INT, IN userIDIn INT)
+CREATE PROCEDURE getListByUserID(IN userIDIn INT, IN presentListIDIn INT)
 BEGIN
-    SELECT * FROM presentlists NATURAL JOIN users WHERE presentListID = presentListIDIn AND userID = userIDIn;
+    SELECT * 
+    FROM presentlists 
+    NATURAL JOIN users 
+    WHERE presentListID = presentListIDIn AND userID = userIDIn;
 END //
 DELIMITER ;
 
--- Get present lists by optional parameters
+-- Get present lists by optional parameters (userID, occasion, name, dateCreated)
 DELIMITER //
 DROP PROCEDURE IF EXISTS getListsBy //
-CREATE PROCEDURE getListsBy(IN occasionIn VARCHAR(255), IN nameIn VARCHAR(255), IN dateCreatedIn DATE)
+CREATE PROCEDURE getListsBy(IN userIDIn INT, IN occasionIn VARCHAR(255), IN nameIn VARCHAR(255), IN dateCreatedIn DATE)
 BEGIN
-    SELECT * FROM presentlists
-    WHERE (occasion = occasionIn OR occasionIn IS NULL)
-    AND (name = nameIn OR nameIn IS NULL)
-    AND (dateCreated = dateCreatedIn OR dateCreatedIn IS NULL);
+    SELECT * 
+    FROM presentlists
+    NATURAL JOIN users
+    WHERE userID = userIDIn;
+    
 END //
 DELIMITER ;
+    --AND (occasion = occasionIn OR occasionIn IS NULL)
+    --AND (name = nameIn OR nameIn IS NULL)
+    --AND (dateCreated = dateCreatedIn OR dateCreatedIn IS NULL);
+
+
 
 -- Add a present list
 DELIMITER //
 DROP PROCEDURE IF EXISTS addList //
-CREATE PROCEDURE addList(IN nameIn VARCHAR(255), IN occasionIn VARCHAR(255))
+CREATE PROCEDURE addList(IN userIDIn INT, IN nameIn VARCHAR(255), IN occasionIn VARCHAR(255))
 BEGIN
-    INSERT INTO presentlists (name, occasion, dateCreated) VALUES (nameIn, occasionIn, NOW());
+    INSERT INTO presentlists (userID, name, occasion, dateCreated) 
+    VALUES (userIDIn, nameIn, occasionIn, NOW());
+    
+    SELECT LAST_INSERT_ID() AS new_list_id;
 END //
 DELIMITER ;
 
 -- Delete a present list
 DELIMITER //
 DROP PROCEDURE IF EXISTS deleteList //
-CREATE PROCEDURE deleteList(IN listIDIn INT)
+CREATE PROCEDURE deleteList(IN userIDIn INT, IN listIDIn INT)
 BEGIN
-    DELETE FROM presentlists WHERE presentListID = listIDIn;
+    DELETE FROM presentlists 
+    WHERE presentListID = listIDIn AND userID = userIDIn;
 END //
 DELIMITER ;
 
@@ -59,10 +72,13 @@ DELIMITER ;
 DELIMITER //
 DROP PROCEDURE IF EXISTS updateList //
 CREATE PROCEDURE updateList(
+    IN userIDIn INT,
     IN listIDIn INT, 
     IN nameIn VARCHAR(255), 
     IN occasionIn VARCHAR(255))
 BEGIN
-    UPDATE presentlists SET name = nameIn, occasion = occasionIn WHERE presentListID = listIDIn;
+    UPDATE presentlists 
+    SET name = nameIn, occasion = occasionIn 
+    WHERE presentListID = listIDIn AND userID = userIDIn;
 END //
 DELIMITER ;
