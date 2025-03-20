@@ -11,16 +11,22 @@
 
     <div class="mb-3">
         <h2>View Present Lists</h2>
-        <label for="occasionFilter" class="form-label">Filter by Occasion:</label>
-        <select id="occasionFilter" class="form-select">
-            <option value="">All Occasions</option>
-            <option value="Birthday">Birthday</option>
-            <option value="Christmas">Christmas</option>
-            <option value="Wedding">Wedding</option>
-            <option value="Other">Other</option>
-        </select>
         <button id="viewPresentListsBtn" class="btn btn-primary">View Present Lists</button>
         <ul id="presentLists"></ul>
+    </div>
+
+    <div class="mb-3">
+        <h2>Create New Present List</h2>
+        <form id="createPresentListForm">
+            <label for="createListName" class="form-label">Present List Name:</label>
+            <input type="text" id="createListName" class="form-control" name="createListName" required>
+
+            <label for="createOccasion" class="form-label">Occasion:</label>
+            <input type="text" id="createOccasion" class="form-control" name="createOccasion" required>
+
+            <button type="submit" class="btn btn-primary">Create Present List</button>
+        </form>
+        <p id="createListResponse"></p>
     </div>
     
     <div class="mb-3">
@@ -32,6 +38,7 @@
         </form>
         <p id="deleteListResponse"></p>
     </div>
+
     <div class="mb-3">
         <h2>Update Present List Contents</h2>
         <form id="updatePresentListContentsForm">
@@ -48,6 +55,7 @@
         </form>
         <p id="updateContentsResponse"></p>
     </div>
+
     <div class="mb-3">
         <h2>Update Present List Information</h2>
         <form id="updatePresentListInfoForm">
@@ -64,30 +72,89 @@
         </form>
         <p id="updateInfoResponse"></p>
     </div>
+
     <script>
         document.getElementById('viewPresentListsBtn').addEventListener('click', function() {
-            const occasionFilter = document.getElementById('occasionFilter').value;
-            fetch(`/8013/present-lists?occasion=${occasionFilter}`)
-                .then(response => response.json())
-                .then(data => {
-                    const listContainer = document.getElementById('presentLists');
-                    listContainer.innerHTML = '';
-                    data.forEach(list => {
-                        const listItem = document.createElement('li');
-                        listItem.textContent = `${list.name} - ${list.occasion} (ID: ${list.id})`;
-                        listContainer.appendChild(listItem);
-                    });
-                })
-                .catch(error => alert('Error fetching present lists'));
+            fetch('/presentlist')
+            .then(response => {
+                console.log('Response status:', response.status);  // Log the response status
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();  // Get the response as text for debugging
+            })
+            .then(data => {
+                console.log('Response from server:', data);  // Log the response content
+                try {
+                    const jsonData = JSON.parse(data);  // Attempt to parse the response as JSON
+                    if (Array.isArray(jsonData)) {
+                        const listContainer = document.getElementById('presentLists');
+                        listContainer.innerHTML = '';
+                        jsonData.forEach(list => {
+                            const listItem = document.createElement('li');
+                            listItem.textContent = `${list.name} - ${list.occasion} (ID: ${list.id})`;
+                            listContainer.appendChild(listItem);
+                        });
+                    } else {
+                        alert('No present lists found or an error occurred.');
+                    }
+                } catch (error) {
+                    alert('Error parsing JSON: ' + error.message);
+                }
+            })
+            .catch(error => alert('Error fetching present lists: ' + error.message));
         });
+
+
+
+        document.getElementById('createPresentListForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const listName = document.getElementById('createListName').value;
+            const occasion = document.getElementById('createOccasion').value;
+
+            const createData = {
+                name: listName,
+                occasion: occasion
+            };
+
+            fetch('/presentlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(createData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Response from server:", data); // Debugging log
+
+                if (data.status === 'success') {
+                    document.getElementById('createListResponse').innerText = `Present list "${listName}" created successfully.`;
+                } else {
+                    document.getElementById('createListResponse').innerText = `Error: ${data.message}`;
+                    alert('Error creating present list: ' + data.message);
+                }
+            })
+            .catch(error => {
+                document.getElementById('createListResponse').innerText = 'Error creating present list';
+                alert('Error creating present list: ' + error.message);
+            });
+        });
+
 
         document.getElementById('deletePresentListForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const listId = document.getElementById('deletePresentListId').value;
-            fetch(`/8013/present-lists/${listId}`, { method: 'DELETE' })
+            fetch(`/presentlist/${listId}`, { method: 'DELETE' })
                 .then(response => response.json())
-                .then(data => document.getElementById('deleteListResponse').innerText = `Present list with ID ${listId} deleted successfully.`)
-                .catch(error => document.getElementById('deleteListResponse').innerText = 'Error deleting present list');
+                .then(data => {
+                    document.getElementById('deleteListResponse').innerText = `Present list with ID ${listId} deleted successfully.`;
+                })
+                .catch(error => {
+                    document.getElementById('deleteListResponse').innerText = 'Error deleting present list';
+                    alert('Error deleting present list: ' + error.message);
+                });
         });
 
         document.getElementById('updatePresentListContentsForm').addEventListener('submit', function(event) {
@@ -95,19 +162,24 @@
             const listId = document.getElementById('updateListId').value;
             const addPresentName = document.getElementById('addPresentName').value;
             const deletePresentName = document.getElementById('deletePresentName').value;
-            
+
             const updateData = {};
             if (addPresentName) updateData.addPresent = addPresentName;
             if (deletePresentName) updateData.deletePresent = deletePresentName;
-            
-            fetch(`/8013/present-lists/${listId}/contents`, {
+
+            fetch(`/presentlist/${listId}/contents`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updateData)
             })
             .then(response => response.json())
-            .then(data => document.getElementById('updateContentsResponse').innerText = 'Present list contents updated successfully.')
-            .catch(error => document.getElementById('updateContentsResponse').innerText = 'Error updating present list contents');
+            .then(data => {
+                document.getElementById('updateContentsResponse').innerText = 'Present list contents updated successfully.';
+            })
+            .catch(error => {
+                document.getElementById('updateContentsResponse').innerText = 'Error updating present list contents';
+                alert('Error updating present list contents: ' + error.message);
+            });
         });
 
         document.getElementById('updatePresentListInfoForm').addEventListener('submit', function(event) {
@@ -115,20 +187,26 @@
             const listId = document.getElementById('updatePresentListId').value;
             const newListName = document.getElementById('updatePresentListName').value;
             const newOccasion = document.getElementById('updateOccasion').value;
-            
+
             const updateData = {};
             if (newListName) updateData.name = newListName;
             if (newOccasion) updateData.occasion = newOccasion;
-            
-            fetch(`/8013/present-lists/${listId}`, {
+
+            fetch(`/presentlist/${listId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updateData)
             })
             .then(response => response.json())
-            .then(data => document.getElementById('updateInfoResponse').innerText = 'Present list information updated successfully.')
-            .catch(error => document.getElementById('updateInfoResponse').innerText = 'Error updating present list information');
+            .then(data => {
+                document.getElementById('updateInfoResponse').innerText = 'Present list information updated successfully.';
+            })
+            .catch(error => {
+                document.getElementById('updateInfoResponse').innerText = 'Error updating present list information';
+                alert('Error updating present list information: ' + error.message);
+            });
         });
+
     </script>
 </body>
 </html>
