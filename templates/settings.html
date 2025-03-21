@@ -1,62 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/css/styles.css">
     <title>Settings</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
-<body class="container mt-5">
+
+<body class="container-fluid">
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-menu">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">CS3103 Dashboard</a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar-menu">
+                <ul class="nav navbar-nav">
+                    <li><a href="/dashboard">Home</a></li>
+                    <li class="active"><a href="#">Settings</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#"><span class="glyphicon glyphicon-user"></span> {{ username }}</a></li>
+                    <li>
+                        <a href="#" id="logout-btn" class="btn btn-danger navbar-btn">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
     
-    <h1>Update Your Information</h1>
+    <div class="container">
+        <h1>Update Your Information</h1>
 
-    <!-- Form to update user information -->
-    <form id="update-form" class="settings-form">
-        <div class="mb-3">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" class="form-control" value="{{ username }}" required>
-        </div>
+        <!-- Form to update user information -->
+        <form id="update-form" class="settings-form">
+            <div class="mb-3">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" class="form-control" value="{{ username }}" required>
+            </div>
 
-        <div class="mb-3">
-            <label for="first_name">First Name:</label>
-            <input type="text" id="first_name" name="first_name" class="form-control" value="{{ first_name }}" required>
-        </div>
+            <div class="mb-3">
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" name="first_name" class="form-control" value="{{ first_name }}" required>
+            </div>
 
-        <div class="mb-3">
-            <label for="last_name">Last Name:</label>
-            <input type="text" id="last_name" name="last_name" class="form-control" value="{{ last_name }}" required>
-        </div>
+            <div class="mb-3">
+                <label for="last_name">Last Name:</label>
+                <input type="text" id="last_name" name="last_name" class="form-control" value="{{ last_name }}" required>
+            </div>
 
-        <div class="mb-3">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" class="form-control" value="{{ email }}" required>
-        </div>
+            <div class="mb-3">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" class="form-control" value="{{ email }}" required>
+            </div>
 
-        <div class="mb-3">
-            <label for="old_password">Old Password:</label>
-            <input type="password" id="old_password" name="old_password" class="form-control" required>
-        </div>
+            <div class="mb-3">
+                <label for="old_password">Old Password:</label>
+                <input type="password" id="old_password" name="old_password" class="form-control" required>
+            </div>
 
-        <div class="mb-3">
-            <label for="new_password">New Password:</label>
-            <input type="password" id="new_password" name="new_password" class="form-control" placeholder="Leave blank to keep current password">
-        </div>
-
-        <div class="mb-3">
-            <button type="submit" class="btn btn-primary">Update Information</button>
-        </div>
-    </form>
+            <div class="mb-3">
+                <label for="new_password">New Password:</label>
+                <input type="password" id="new_password" name="new_password" class="form-control"
+                    placeholder="Leave blank to keep current password">
+            </div>
+            <br>
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Update Information</button>
+            </div>
+        </form>
+    </div>
 
     <script>
-        document.getElementById('update-form').addEventListener('submit', function(event) {
-            event.preventDefault();
+        document.addEventListener("DOMContentLoaded", function () {
+            // Fetch user data when the page loads
+    
+            fetch('/user/update', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const user = data.data;
 
+                    // Populate the form fields with user data
+                    document.getElementById('username').value = user.username || '';
+                    document.getElementById('first_name').value = user.firstName || '';
+                    document.getElementById('last_name').value = user.lastName || '';
+                    document.getElementById('email').value = user.emailAdress || ''; // Fix field name
+                } else {
+                    alert('Failed to fetch user data');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching user data:', error);
+                alert('Error fetching user information');
+            });
+        });
+    
+        document.getElementById('update-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+    
             const formData = new FormData(event.target);
             const data = {};
             formData.forEach((value, key) => {
                 data[key] = value;
             });
-
+    
             fetch('/user/update', {
                 method: 'PUT',
                 headers: {
@@ -64,19 +124,21 @@
                 },
                 body: JSON.stringify(data),
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert('Information updated successfully');
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error updating information');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Information updated successfully');
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error updating information');
+                });
         });
     </script>
+    
 </body>
+
 </html>

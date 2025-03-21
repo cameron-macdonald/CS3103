@@ -1,48 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-        <!-- The above 2 meta tags *must* come first in the head; any other head content must
-          come *after* these tags -->
-        <title>CS3103 Term Project Dashboard</title>
-    </head>
-      
-<body class="container">
-    <h2 class="mt-5">Welcome, {{ username }}!</h2>
-    <p>You have successfully logged in.</p>
 
-    <a href="/settings" class="btn btn-primary">Settings</a>
-    <button type="submit" id="logout-btn" class="btn btn-danger">Logout</button>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="static/css/styles.css">
+  <title>CS3103 Term Project Dashboard</title>
+</head>
 
-    <hr>
+<body class="container-fluid">
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-menu">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">CS3103 Dashboard</a>
+      </div>
+      <div class="collapse navbar-collapse" id="navbar-menu">
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="#">Home</a></li>
+          <li><a href="/settings">Settings</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#"><span class="glyphicon glyphicon-user"></span> {{ username }}</a></li>
+          <li style="margin-right: 15px;"><button type="submit" id="logout-btn" class="btn btn-danger navbar-btn">Logout</button></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container">
+    <h2 class="mt-5">Welcome, {{ username }} to the CS3103 Present Registery!</h2>
+
+    <br>
 
     <h3>Manage Present Lists</h3>
     <p>Click below to view and manage your present lists.</p>
     <a href="/presentlist" class="btn btn-success">Go to Present Lists</a>
+  </div>
 
-    <script>
-      document.getElementById("logout-btn").addEventListener("click", function (event) {
-        fetch("/Auth/Logout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include"
+  <script>
+    document.getElementById("logout-btn").addEventListener("click", function (event) {
+      fetch("/Auth/Logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === "success") {
+            alert("Logout successful!");
+            window.location.href = "/login";
+          } else {
+            alert("Logout failed!");
+          }
         })
-          .then(response => response.json())
-          .then(data => {
-            if (data.status === "success") {
-              alert("Logout successful!");
-              window.location.href = "/login"; 
-            } else {
-              alert("Logout failed!");
-            }
-          })
-          .catch(error => console.error("Error:", error));
-      });
-    </script>
+        .catch(error => console.error("Error:", error));
+    });
+  </script>
 
 </body>
+
 </html>

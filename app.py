@@ -40,13 +40,6 @@ def dashboardPage():
 def homePage():
     return render_template('login.html')
 ####################################################################################
-@app.route('/settings')
-def settingsPage():
-    if 'username' in session:
-        return render_template('settings.html', username=session['username'])
-    else:
-        return render_template('login.html')  # Make sure 'home' is a valid route
-####################################################################################
 @app.route('/presentlist')
 def presentlistPage():
     if 'username' in session:
@@ -54,6 +47,13 @@ def presentlistPage():
     else:
         return render_template('login.html')  # Redirect to the login page if no session
 
+####################################################################################
+@app.route('/settings')
+def settingsPage():
+    if 'username' in session:
+        return render_template('settings.html', username=session['username'])
+    else:
+        return render_template('login.html')  # Make sure 'home' is a valid route
 ####################################################################################
 #
 # Error handlers
@@ -336,8 +336,6 @@ class PresentList(Resource):
         except Exception as e:
             abort(500, message="Error updating present list information")
 
-
-
 class Login(Resource):
     def post(self):
         if not request.json or 'username' not in request.json or 'password' not in request.json:
@@ -390,6 +388,25 @@ class Logout(Resource):
         except Exception as e:
             abort(500, message="Error: please try again")  # Catch any other errors
 
+class Settings(Resource):
+    def get(self):
+        try:
+            if "user_id" not in session:
+                abort(401, message="Unauthorized: Please log in")
+
+            sqlProc = "getUserById"
+            sqlArgs = [session["user_id"]]
+
+            result = db_access(sqlProc, sqlArgs)  # Fetch user data
+            if not result:
+                abort(404, message="User not found")  # More accurate error
+
+            return make_response(jsonify({"status": "success", "data": result[0]}), 200)
+
+        except Exception as e:
+            print(f"Error: {e}")  # Logs error for debugging
+            abort(500, message="Internal server error, please try again")
+
 
 ####################################################################################
 #
@@ -398,8 +415,9 @@ class Logout(Resource):
 api = Api(app)
 api.add_resource(Login, '/Auth/Login')
 api.add_resource(Logout, '/Auth/Logout')
-api.add_resource(User, "/user", "/user/<int:id>", "/user/update")
+api.add_resource(User, "/user", "/user/<int:id>")
 api.add_resource(PresentList, '/presentlist')
+api.add_resource(Settings,"/user/update")
 
 
 #############################################################################
