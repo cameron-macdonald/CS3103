@@ -179,7 +179,7 @@ curl -k -X POST "https://cs3103.cs.unb.ca:8013/Auth/Login" \
   -d '{\
     "username": "emilioc",\
     "password": "emilioca"\
-  }'
+  }' -i
 
 -- POST /Auth/logout - Log out the user and destroy the session
 curl -X POST "https://cs3103.cs.unb.ca:8013/Auth/logout" \
