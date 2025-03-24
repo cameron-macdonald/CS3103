@@ -9,6 +9,23 @@
 <body class="container mt-5">
     <h1>Manage Present List</h1>
 
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Present Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Priority</th>
+            </tr>
+        </thead>
+        <tbody id="presents-table">
+            <!-- Presents will be inserted here dynamically -->
+        </tbody>
+    </table>
+
+
     <div class="mb-3">
         <h2>View Present Lists</h2>
         <button id="viewPresentListsBtn" class="btn btn-primary">View Present Lists</button>
@@ -74,6 +91,38 @@
     </div>
 
     <script>
+        function loadPresents() {
+            const pathParts = window.location.pathname.split("/");
+            const list_id = pathParts[pathParts.length - 1]; 
+
+            fetch(`/present/${list_id}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include"
+            })
+            .then(response => response.json())
+            .then(data => {
+              let tableBody = document.getElementById("presents-table");
+            tableBody.innerHTML = "";
+
+            data.forEach(present => {
+                let row = `<tr>
+                    <td>${present.presentID}</td>
+                    <td>${present.presentName}</td>
+                    <td>${present.description}</td>
+                    <td>${present.status === 1 ? "Received" : "Not Received"}</td>
+                    <td>${present.priority}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        })
+            .catch(error => console.error("Error fetching presents:", error));
+        }
+
+        // Load data when page loads
+        window.onload = loadPresents;
+
+
         document.getElementById('viewPresentListsBtn').addEventListener('click', function() {
             fetch('/presentlist')
             .then(response => {

@@ -1,87 +1,39 @@
--- Get all presents
 DELIMITER //
-DROP PROCEDURE IF EXISTS getPresents //
-CREATE PROCEDURE getPresents()
+CREATE TABLE Presents (
+    presentID INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    presentListID INT(11) NOT NULL,
+    presentName VARCHAR(255) NOT NULL,
+    description VARCHAR(511),
+    status TINYINT DEFAULT 0,  -- 0 = not received, 1 = received
+    priority TINYINT DEFAULT 1, -- Priority level (e.g., 1 = low, 2 = medium, 3 = high)
+    FOREIGN KEY (presentListID) 
+    REFERENCES presentlists(presentListID) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+
+DELIMITER $$
+
+CREATE PROCEDURE getPresentsByListID(IN listID INT)
 BEGIN
-    SELECT * FROM presents;
-END //
+    SELECT presentID, presentName, description, status, priority
+    FROM Presents
+    WHERE presentListID = listID;
+END $$
+
 DELIMITER ;
 
--- Get all presents by userID
--- DELIMITER //
--- DROP PROCEDURE IF EXISTS getPresentsByUserID //
--- CREATE PROCEDURE getPresentsByUserID(IN userIDIn INT)
--- BEGIN
---     SELECT * FROM presents NATURAL JOIN presentlists NATURAL JOIN users
---     WHERE userID = userIDIn;
--- END //
--- DELIMITER ;
+DELIMITER $$
 
--- Get presents by ID
-DELIMITER //
-DROP PROCEDURE IF EXISTS getPresentByID //
-CREATE PROCEDURE getPresentByID(IN presentIDIn INT)
+CREATE PROCEDURE addPresent(
+    IN listID INT, 
+    IN pName VARCHAR(255), 
+    IN pDescription VARCHAR(511), 
+    IN pStatus TINYINT, 
+    IN pPriority TINYINT
+)
 BEGIN
-    SELECT * FROM presents WHERE presentID = presentIDIn;
-END //
-DELIMITER ;
+    INSERT INTO Presents (presentListID, presentName, description, status, priority)
+    VALUES (listID, pName, pDescription, pStatus, pPriority);
+END $$
 
--- Get presents by userID and ID
-DELIMITER //
-DROP PROCEDURE IF EXISTS getPresentByUserID //
-CREATE PROCEDURE getPresentByUserID(IN userIDIn INT, IN presentIDIn INT)
-BEGIN
-    SELECT * FROM presents NATURAL JOIN presentlists NATURAL JOIN users 
-    WHERE presentID = presentIDIn AND userID = userIDIn;
-END //
-DELIMITER ;
-
--- Get presents by optional parameters
-DELIMITER //
-DROP PROCEDURE IF EXISTS getPresentsBy //
-CREATE PROCEDURE getPresentsBy(IN presentNameIn VARCHAR(255), IN descriptionIn VARCHAR(511), IN statusIn TINYINT, IN priorityIn TINYINT)
-BEGIN
-    SELECT * FROM presents
-    WHERE (presentName = presentNameIn OR presentNameIn IS NULL)
-    AND (description = descriptionIn OR descriptionIn IS NULL)
-    AND (status = statusIn OR statusIn IS NULL)
-    AND (priority = priorityIn OR priorityIn IS NULL);
-END //
-DELIMITER ;
-
--- Add a present
-DELIMITER //
-DROP PROCEDURE IF EXISTS addPresent //
-CREATE PROCEDURE addPresent(IN presentNameIn VARCHAR(255), IN descriptionIn VARCHAR(511), IN statusIn TINYINT, IN priorityIn TINYINT)
-BEGIN
-    INSERT INTO presents (presentName, description, status, priority)
-    VALUES (presentNameIn, descriptionIn, statusIn, priorityIn);
-END //
-DELIMITER ;
-
--- Delete a present
-DELIMITER //
-DROP PROCEDURE IF EXISTS deletePresent //
-CREATE PROCEDURE deletePresent(IN presentIDIn INT)
-BEGIN
-    DELETE FROM presents WHERE presentID = presentIDIn;
-END //
-DELIMITER ;
-
--- Update a present
-DELIMITER //
-DROP PROCEDURE IF EXISTS updatePresent //
-CREATE PROCEDURE updatePresent(
-    IN presentIDIn INT, 
-    IN listIDIn INT, 
-    IN presentNameIn VARCHAR(255), 
-    IN descriptionIn VARCHAR(511), 
-    IN statusIn TINYINT, 
-    IN priorityIn TINYINT)
-BEGIN
-    UPDATE presents SET listID = listIDIn, presentName = presentNameIn, description = descriptionIn, 
-        status = statusIn, priority = priorityIn
-    WHERE presentID = presentIDIn;
-    SELECT * FROM presents WHERE presentID = presentIDIn;
-END //
 DELIMITER ;

@@ -7,6 +7,7 @@ import json
 import bcrypt
 import pymysql.err
 import ssl #include ssl libraries
+from flask_mail import Mail, Message
 
 import settings # Our server and db settings, stored in settings.py
 from flask import render_template
@@ -40,12 +41,9 @@ def dashboardPage():
 def homePage():
     return render_template('login.html')
 ####################################################################################
-@app.route('/presentlist')
-def presentlistPage():
-    if 'username' in session:
-        return render_template('presentlist.html', username=session['username'])
-    else:
-        return render_template('login.html')  # Redirect to the login page if no session
+@app.route('/presentlist/<int:list_id>')
+def view_present_list(list_id):
+    return render_template('presentlist.html', list_id=list_id)
 
 ####################################################################################
 @app.route('/settings')
@@ -185,28 +183,31 @@ class User(Resource):
             abort(500, message="Error updating user information: " + str(e))
 
 class PresentList(Resource):
-    def get(self):
+    def get(self, list_id=None):
         if 'user_id' not in session:
             abort(401, message="Unauthorized: Please log in")
-        
+
         user_id = session['user_id']  # Get the user_id from the session
         
-        # Fetch present lists associated with the logged-in user
-        sqlProc = 'getListsBy'  # The stored procedure to get present lists by userID
-        sqlArgs = [user_id, None, None, None]  # Pass only the user_id, no occasion filter
-        
         try:
-            result = db_access(sqlProc, sqlArgs)  # Fetch present lists from the DB
+            if list_id:
+                sqlProc = 'getListByID'  # Stored procedure to get a single present list
+                sqlArgs = [list_id]  # Pass only the list_id
+            else:  # If no ID is provided, fetch all present lists for the user
+                sqlProc = 'getLists'
+                sqlArgs = []
+
+            result = db_access(sqlProc, sqlArgs)  # Fetch data from DB
             
-            if result is None:
-                print('No data found for this user')  # Log this if no data is returned
+            if not result:
+                print('No data found')  # Log this if no data is found
                 return make_response(jsonify([]), 200)  # Return empty list if no data
-            
-            print('Result from DB:', result)  # Log the result for debugging
+
             return make_response(jsonify(result), 200)  # Return a JSON response with status 200
         except Exception as e:
             print(f"Error: {str(e)}")  # Log the error
             abort(500, message="Error fetching present lists")
+
 
     # Create a new Present List
     def post(self):
@@ -234,9 +235,6 @@ class PresentList(Resource):
         except Exception as e:
             print(f"Error: {str(e)}")
             return make_response(jsonify({"status": "error", "message": f"Error creating present list: {str(e)}"}), 500)
-
-
-
 
     # Delete Present List by ID
     def delete(self, id):
@@ -268,8 +266,6 @@ class PresentList(Resource):
         
         except Exception as e:
             abort(500, message="Error deleting present list")
-
-
 
     # Update Present List Contents (Add/Delete presents)
     def put(self, id):
@@ -308,8 +304,6 @@ class PresentList(Resource):
 
         except Exception as e:
             abort(500, message="Error updating present list contents")
-
-
 
     # Update Present List Information (Name, Occasion)
     def patch(self, id):
@@ -407,6 +401,20 @@ class Settings(Resource):
             print(f"Error: {e}")  # Logs error for debugging
             abort(500, message="Internal server error, please try again")
 
+class Present(Resource):
+    def get(self, list_id):
+        if 'user_id' not in session:
+            abort(401, message="Unauthorized: Please log in")
+
+        sqlProc = 'getPresentsByListID'
+        sqlArgs = [list_id]
+
+        try:
+            result = db_access(sqlProc, sqlArgs)
+            return make_response(jsonify(result), 200) if result else make_response(jsonify([]), 200)
+        except Exception as e:
+            abort(500, message=str(e))
+
 
 ####################################################################################
 #
@@ -418,6 +426,7 @@ api.add_resource(Logout, '/Auth/Logout')
 api.add_resource(User, "/user", "/user/<int:id>")
 api.add_resource(PresentList, '/presentlist')
 api.add_resource(Settings,"/user/update")
+api.add_resource(Present, '/present/<int:list_id>')
 
 
 #############################################################################

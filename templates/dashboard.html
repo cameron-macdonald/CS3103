@@ -41,12 +41,64 @@
 
     <br>
 
-    <h3>Manage Present Lists</h3>
-    <p>Click below to view and manage your present lists.</p>
-    <a href="/presentlist" class="btn btn-success">Go to Present Lists</a>
+    <table class="table table-bordered">
+      <thead>
+          <tr>
+              <th>Name</th>
+              <th>Occasion</th>
+              <th>Date Created</th>
+              <th>View List</th>
+          </tr>
+      </thead>
+      <tbody id="present-lists-table">
+          <!-- Data will be inserted here -->
+      </tbody>
+  </table>
+
   </div>
 
   <script>
+function loadPresentLists() {
+        fetch("/presentlist", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include"
+        })
+        .then(response => response.json())
+        .then(data => {
+            let tableBody = document.getElementById("present-lists-table");
+            tableBody.innerHTML = ""; // Clear existing data
+
+            data.forEach(list => {
+                let row = `<tr>
+                    <td>${list.name}</td>
+                    <td>${list.occasion}</td>
+                    <td>${list.dateCreated}</td>
+                    <td>
+                        <button class="btn btn-primary view-list-btn" data-id="${list.presentListID}">
+                            View List
+                        </button>
+                    </td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+
+            // Attach event listeners to the buttons after table updates
+            document.querySelectorAll(".view-list-btn").forEach(button => {
+                button.addEventListener("click", function() {
+                    let listId = this.getAttribute("data-id");
+                    window.location.href = `/presentlist/${listId}`;  // Redirect to view the list
+                });
+            });
+
+        })
+        .catch(error => console.error("Error fetching present lists:", error));
+    }
+
+    // Load data when page loads
+    window.onload = loadPresentLists;
+
+
     document.getElementById("logout-btn").addEventListener("click", function (event) {
       fetch("/Auth/Logout", {
         method: "POST",
