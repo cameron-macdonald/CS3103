@@ -1,0 +1,1350 @@
+openapi: 3.0.3
+info:
+  title: Present Registry API
+  description: API for managing users, present lists, presents, and email verification in a present registry.
+  version: 1.0.0
+  contact:
+    name: University of New Brunswick
+    email: cameron.macdonald@unb.ca
+    url: https://cs3103.cs.unb.ca/8013
+  license:
+    name: Apache 2.0
+    url: http://apache.org/licenses/LICENSE-2.0.html
+  
+
+servers:
+  - url: https://cs3103.cs.unb.ca/8013
+    description: Class Project Server
+
+paths:
+  /users:
+    get:
+      summary: Retrieve all users
+      operationId: getUsers
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: A JSON List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '400':
+          description: Bad input parameter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Bad input parameter"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+    post:
+      summary: Add a new user
+      operationId: addUser
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emailAdress:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                userName:
+                  type: string
+                  example: "CamMacIsCool"
+                firstName:
+                  type: string
+                  example: "Cam"
+                lastName:
+                  type: string
+                  example: "Macdonald"
+                password:
+                  type: string
+                  format: password
+                  example: "StrongPassword"
+      responses:
+        '201':
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 123
+                  message:
+                    type: string
+                    example: "User created successfully"
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid input parameters"
+        '409':
+          description: Conflict - Email already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Email address already in use"
+    delete:
+      summary: Delete an existing user
+      operationId: deleteUser
+      security:
+        - cookieAuth: []
+      parameters:
+        # - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User deleted successfully"
+        '400':
+          description: Bad request - Invalid user ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid user ID"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '403':
+          description: Forbidden - Not allowed to delete this user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have permission to delete this user"
+        '404':
+          description: Not Found - User does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User not found"
+  /users/{userId}:
+    get:
+      summary: Retrieve a specific user
+      operationId: getUserByID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1741
+      responses:
+        '200':
+          description: A single JSON Users details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request - Invalid format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid user format"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User not found"
+    put:
+      summary: Update an existing user
+      operationId: updateUser
+      security:
+        - cookieAuth: []
+      parameters:
+        # - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emailAdress:
+                  type: string
+                  format: email
+                  example: "janeemail@example.com"
+                userName:
+                  type: string
+                  example: "JaneLovesAPIs"
+                firstName:
+                  type: string
+                  example: "Jane"
+                lastName:
+                  type: string
+                  example: "Smith"
+                password:
+                  type: string
+                  format: password
+                  example: "NewStrongPassword123"
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User updated successfully"
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid input parameters"
+        '404':
+          description: Not Found - User does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User not found"
+  /users/search:
+    get:
+      summary: Search for users based on optional criteria
+      operationId: getUsersBy
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: firstName
+          in: query
+          schema:
+            type: string
+            example: "John"
+          description: Filter by first name (optional)
+        - name: lastName
+          in: query
+          schema:
+            type: string
+            example: "Cena"
+          description: Filter by last name (optional)
+        - name: userName
+          in: query
+          schema:
+            type: string
+            example: "U-cant-C-me"
+          description: Filter by user name (optional)
+        - name: emailAddress
+          in: query
+          schema:
+            type: string
+            example: "JohnCena@wwe.com"
+          description: Filter by email address (optional)
+        - name: dateCreated
+          in: query
+          schema:
+            type: string
+            format: date
+            example: "2025-01-01"
+          description: Filter by account creation date (optional)
+      responses:
+        '200':
+          description: A JSON List of users matching the given criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '400':
+          description: Bad input parameter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid data format"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: No users matching the criteria were found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No matching users found"
+  /users/{userId}/validated-emails:
+    post:
+      summary: Add a validated email for a user
+      operationId: addValidatedEmail
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emailAddress:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        '201':
+          description: Validated email added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Validated email added successfully"
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid email format"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '409':
+          description: Conflict - Email already validated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Email is already validated"
+    delete:
+      summary: Remove a validated email for a user
+      operationId: deleteValidatedEmail
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Validated email removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Validated email removed successfully"
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid user ID"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: Not Found - Validated email does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No validated email found for this user"
+  /users/{userId}/present-lists:
+    get:
+      summary: Retrieve all present lists for a user
+      operationId: getPresentListsByUserId
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the user whose present lists are being retrieved
+      responses:
+        '200':
+          description: Successfully retrieved present lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PresentList'
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid userId format"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: Not Found - No present lists found for the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No present lists found for the given user"
+  /present-lists:
+    get:
+      summary: Retrieve all present lists
+      operationId: getPresentLists
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: A JSON List of present lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PresentList'
+        '400':
+          description: Bad input parameter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Bad input parameter"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+    post:
+      summary: Add a new present list
+      operationId: addPresentList
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Cam's Birthday Wishlist"
+                occasion:
+                  type: string
+                  example: "Birthday"
+      responses:
+        '201':
+          description: Present list successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  listId:
+                    type: integer
+                    example: 456
+                  message:
+                    type: string
+                    example: "Present list created successfully"
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid input parameters"
+  /present-lists/{presentListId}:
+    get:
+      summary: Retrieve a specific present list by ID
+      operationId: getPresentListById
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: presentListId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the present list to retrieve
+      responses:
+        '200':
+          description: Successfully retrieved present list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentList'
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid presentListId format"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: Not Found - Present list does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Present list not found"
+    put:
+      summary: Update an existing present list
+      operationId: updatePresentList
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: presentListId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the present list to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                presentListName:
+                  type: string
+                  example: "John's Birthday"
+                occasion:
+                  type: string
+                  example: "Birthday"
+      responses:
+        '200':
+          description: Successfully updated present list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Present list updated successfully"
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid input parameters"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: Not Found - Present list does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Present list not found"
+    delete:
+      summary: Delete a present list by ID
+      operationId: deletePresentList
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: presentListId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the present list to delete
+      responses:
+        '200':
+          description: Successfully deleted present list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Present list deleted successfully"
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid presentListId format"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: Not Found - Present list does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Present list not found"
+  /present-lists/search:
+    get:
+      summary: Search for present lists based on optional parameters
+      operationId: searchPresentLists
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: occasion
+          in: query
+          required: false
+          example: "Birthday"
+          schema:
+            type: string
+        - name: presentListName
+          in: query
+          required: false
+          example: "John"
+          schema:
+            type: string
+        - name: dateCreated
+          example: "2025"
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successfully retrieved matching present lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PresentList'
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid search parameters"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: No present lists found matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No present lists found"
+  /presents:
+    get:
+      summary: Retrieve all presents
+      operationId: getAllPresents
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved all presents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Present'
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal server error"
+  /presents/{presentId}:
+    get:
+      summary: Retrieve a specific present by ID
+      operationId: getPresentById
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: presentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the present to retrieve
+      responses:
+        '200':
+          description: Successfully retrieved present
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Present'
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid presentId format"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: Not Found - Present does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Present not found"
+    put:
+      summary: Update an existing present
+      operationId: updatePresent
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: presentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the present to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                presentName:
+                  type: string
+                  example: "Xbox One"
+                description:
+                  type: string
+                  example: "Old gaming console to play with my friends"
+                status:
+                  type: boolean
+                  example: true
+                priority:
+                  type: integer
+                  example: 1
+      responses:
+        '200':
+          description: Successfully updated present
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Present updated successfully"
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid input parameters"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: Not Found - Present does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Present not found"
+    delete:
+      summary: Delete a present by ID
+      operationId: deletePresent
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: presentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the present to delete
+      responses:
+        '200':
+          description: Successfully deleted present
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Present deleted successfully"
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid presentId format"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: Not Found - Present does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Present not found"
+  /presents/search:
+    get:
+      summary: Search for presents based on optional parameters
+      operationId: searchPresents
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: presentListId
+          in: query
+          required: false
+          example: 1741
+          schema:
+            type: integer
+        - name: presentName
+          in: query
+          example: "PS4"
+          required: false
+          schema:
+            type: string
+        - name: status
+          example: True
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: priority
+          in: query
+          example: 1
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully retrieved matching presents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Present'
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid search parameters"
+        '401':
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized - Invalid or missing token"
+        '404':
+          description: No presents found matching criteria
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No presents found"
+  /users/{userId}/validated-email:
+    post:
+      summary: Add a validated email after successful verification
+      operationId: addValidatedEmailAddress
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emailAddress:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        '201':
+          description: Email successfully validated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Email validated successfully"
+        '400':
+          description: Bad request - Invalid input
+        '404':
+          description: User not found
+    delete:
+      summary: Remove a validated email
+      operationId: deleteValidatedEmailAddress
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Email validation removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Validated email removed"
+        '404':
+          description: User or email not found
+  /verification-tokens:
+    post:
+      summary: Create a new verification token to send
+      operationId: createVerificationToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                token:
+                  type: string
+                  example: "abc123xyz456"
+      responses:
+        '201':
+          description: Verification token created
+        '400':
+          description: Bad request - Invalid input
+  /verification-tokens/verify:
+    post:
+      summary: Verify a token and validate email
+      operationId: verifyToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Token verified, email validated
+        '400':
+          description: Invalid or expired token
+        '404':
+          description: User or token not found
+  /verification-tokens/expired:
+    delete:
+      summary: Delete expired verification tokens
+      operationId: deleteExpiredTokens
+      responses:
+        '200':
+          description: Expired tokens deleted
+  /auth/login:
+    post:
+      summary: Authenticate user and start a session
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Successfully logged in, session started
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: "Success"
+        '401':
+          description: Unauthorized - Invalid credentials
+  /auth/logout:
+    post:
+      summary: Log out the user and destroy the session
+      operationId: logoutUser
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Successfully logged out
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: "sessionId=; HttpOnly; Secure; Max-Age=0"
+        '401':
+          description: Unauthorized - No valid session
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionId
+  schemas:
+    User:
+      type: object
+      properties:
+        userId:
+          type: integer
+          example: 1723
+        userName:
+          type: string
+          example: "CamisKool"
+        firstName:
+          type: string
+          example: "Cameron"
+        lastName:
+          type: string
+          example: "MacDonald"
+        email:
+          type: string
+          example: "camEmail@unb.ca"
+    PresentList:
+      type: object
+      properties:
+        presentListId:
+          type: integer
+          example: 17
+        userId:
+          type: integer
+          description: The ID of the user who owns the present list
+          example: 174
+        presentListName:
+          type: string
+          example: "Johns 58th B-day"
+        occasion:
+          type: string
+          example: "Birthday"
+        dateCreated:
+          type: string
+          format: date-time
+          example: "2025-02-27T15:30:00Z"
+    Present:
+      type: object
+      properties:
+        presentId:
+          type: integer
+          example: 17
+        presentListId:
+          type: integer
+          example: 174
+        presentName:
+          type: string
+          example: "Xbox 1s"
+        description:
+          type: string
+          example: "Console to play video games with my friends"
+        status:
+          type: boolean
+          description: "True if its already been purchased else false"
+          example: True
+        priority:
+          type: integer
+          description: "1 the user really wants it, 5 the user does not want it that bad"
+          example: "1"
