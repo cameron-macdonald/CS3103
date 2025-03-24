@@ -9,7 +9,7 @@ curl -X POST "https://cs3103.cs.unb.ca/8013/users" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE" \
   -d '{
-    "emailAdress": "user@example.com",
+    "email": "user@example.com",
     "userName": "CamMacIsCool",
     "firstName": "Cam",
     "lastName": "Macdonald",
@@ -32,7 +32,7 @@ curl -X PUT "https://cs3103.cs.unb.ca/8013/users/{userId}" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE" \
   -d '{
-    "emailAdress": "janeemail@example.com",
+    "email": "janeemail@example.com",
     "userName": "JaneLovesAPIs",
     "firstName": "Jane",
     "lastName": "Smith",
@@ -40,7 +40,7 @@ curl -X PUT "https://cs3103.cs.unb.ca/8013/users/{userId}" \
 }'
 
 -- GET /users/search - Search for users based on optional criteria
-curl -X GET "https://cs3103.cs.unb.ca/8013/users/search?firstName=John&lastName=Cena&userName=U-cant-C-me&emailAddress=JohnCena@wwe.com&dateCreated=2025-01-01" \
+curl -X GET "https://cs3103.cs.unb.ca/8013/users/search?firstName=John&lastName=Cena&userName=U-cant-C-me&email=JohnCena@wwe.com&dateCreated=2025-01-01" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE"
 
@@ -50,7 +50,7 @@ curl -X POST "https://cs3103.cs.unb.ca/8013/users/{userId}/validated-emails" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE" \
   -d '{
-    "emailAddress": "user@example.com"
+    "email": "user@example.com"
 }'
 
 -- DELETE /users/{userId}/validated-emails - Remove a validated email for a user
@@ -74,7 +74,7 @@ curl -X POST "https://cs3103.cs.unb.ca/8013/present-lists" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE" \
   -d '{
-    "name": "Cam\'s Birthday Wishlist",
+    "presentListName": "Cam\'s Birthday Wishlist",
     "occasion": "Birthday"
 }'
 
@@ -141,7 +141,7 @@ curl -X POST "https://cs3103.cs.unb.ca/8013/users/{userId}/validated-emails" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE" \
   -d '{
-    "emailAddress": "user@example.com"
+    "email": "user@example.com"
   }'
 
 -- DELETE /users/{userId}/validated-emails - Remove a validated email for a user
