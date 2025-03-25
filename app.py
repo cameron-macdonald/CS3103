@@ -7,7 +7,11 @@ import json
 import bcrypt
 import pymysql.err
 import ssl #include ssl libraries
-from flask_mail import Mail, Message
+import smtplib
+import hashlib
+import os
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 import settings # Our server and db settings, stored in settings.py
 from flask import render_template
@@ -53,6 +57,38 @@ def settingsPage():
     else:
         return render_template('login.html')  # Make sure 'home' is a valid route
 ####################################################################################
+@app.route("/verification-tokens", methods=["POST"])
+def create_verification_token():
+    user_id = request.json["userId"]
+    token = generate_verification_token(user_id)
+    return jsonify({"token": token})
+
+@app.route("/verification-tokens/verify", methods=["POST"])
+def verify_email_token():
+    user_id = request.json["userId"]
+    token = request.json["token"]
+    success, message = verify_token(user_id, token)
+    if success:
+        return jsonify({"message": message}), 200
+    return jsonify({"message": message}), 400
+
+@app.route("/users/<int:user_id>/validated-emails", methods=["POST"])
+def add_validated_email_route(user_id):
+    email = request.json["email"]
+    add_validated_email(user_id, email)
+    return jsonify({"message": "Email validated successfully"}), 200
+
+@app.route("/users/<int:user_id>/validated-emails", methods=["DELETE"])
+def remove_validated_email_route(user_id):
+    email = request.json["email"]
+    remove_validated_email(user_id, email)
+    return jsonify({"message": "Email removed successfully"}), 200
+
+@app.route("/verification-tokens/expired", methods=["DELETE"])
+def cleanup_expired_tokens_route():
+    delete_expired_tokens()
+    return jsonify({"message": "Expired tokens cleaned up"}), 200
+
 #
 # Error handlers
 #
@@ -90,6 +126,15 @@ class User(Resource):
         try:
             result = db_access(sqlProc, sqlArgs)  
             user_id = result[0]  # Extract the user ID
+
+            verification_token = generate_verification_token(user_id)
+
+            # Construct the verification link (update the base URL)
+            verification_link = f"https://cs3103.cs.unb.ca:8013/verification-tokens/verify?userId={user_id}&token={verification_token}"
+
+            # Send the verification email with the link
+            send_verification_email(email, verification_link)
+
             return make_response(jsonify({"status": "success", "user_id": user_id}), 201)
         except Exception as e:
             abort(500, message="Error: please try again")  # Catch any other errors
@@ -391,6 +436,78 @@ class Present(Resource):
         except Exception as e:
             abort(500, message=str(e))
 
+def generate_verification_token(user_id):
+    # Create a token using the user ID and a random salt
+    salt = os.urandom(16)
+    token = hashlib.sha256(f"{user_id}{salt}".encode()).hexdigest()
+
+    # Set token expiration (e.g., 1 hour)
+    expiration_time = datetime.utcnow() + timedelta(hours=1)
+    
+    save_verification_token(user_id, token, expiration_time)
+
+    return token
+    
+def send_verification_email(to_email, verification_link):
+    # Set up the server and login details
+    smtp_server = "smtp.unb.ca"
+    smtp_port = 25  # Standard SMTP port (no authentication)
+
+    from_email = "CS3103@unb.ca"  # Your email address
+    subject = "Email Verification for Present Registery"
+    body = f"Please verify your email by clicking the link:"
+
+    # Create the message
+    message = MIMEMultipart()
+    message["From"] = from_email
+    message["To"] = to_email
+    message["Subject"] = subject
+
+    message.attach(MIMEText(body, "plain"))
+
+    # Send the email
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.sendmail(from_email, to_email, message.as_string())
+        print("Verification email sent successfully!")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+# Function to verify the token
+def verify_token(user_id, token):
+    # Retrieve token details from the database
+    token_data = get_verification_token(user_id, token)
+    
+    if not token_data:
+        return False, "Invalid token"
+
+    # Check if the token is expired
+    if token_data['expiration_time'] < datetime.utcnow():
+        return False, "Token expired"
+
+    # Mark the email as verified in your database
+    mark_email_verified(user_id)
+
+    # Optionally delete the token after it's verified
+    delete_verification_token(user_id, token)
+
+    return True, "Email verified successfully"
+
+# Function to add the validated email
+def add_validated_email(user_id, email):
+    # Assuming you have a database function `save_validated_email`
+    save_validated_email(user_id, email)
+
+# Function to remove the validated email
+def remove_validated_email(user_id, email):
+    # Assuming you have a database function `delete_validated_email`
+    delete_validated_email(user_id, email)
+
+# Function to delete expired tokens
+def delete_expired_tokens():
+    # Assuming you have a database function `cleanup_expired_tokens`
+    cleanup_expired_tokens()
+
 
 ####################################################################################
 #
@@ -404,7 +521,6 @@ api.add_resource(UserPresentLists, "/user/<int:id>/presentlist")
 api.add_resource(PresentList, '/presentlist', "/presentlist/<int:list_id>")
 api.add_resource(Settings,"/user/update")
 api.add_resource(Present, '/present/<int:list_id>')
-
 
 #############################################################################
 if __name__ == "__main__":

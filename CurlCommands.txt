@@ -23,7 +23,7 @@ _________________________________________________________________
 ________________________USERS_____________________________________
 
 -- GET /user - Retrieve all users
-curl -k -X GET "https://cs3103.cs.unb.ca:8013/user/1" \
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/user" \
   -b cookies.txt
 __________________________________________________________________
 
@@ -113,6 +113,18 @@ _____________________________________________________________________
 curl -k -X DELETE "https://cs3103.cs.unb.ca:8013/presentlist/8" \
   -b cookies.txt
 
+_____________________________________________________________________
+
+
+
+
+___________________________________________________________________
+-- POST /Auth/logout - Log out the user and destroy the session
+curl -k -X POST "https://cs3103.cs.unb.ca:8013/Auth/Logout" \
+  -b cookies.txt
+
+___________________________________________________________________
+
 
 
 
@@ -147,6 +159,10 @@ curl -X DELETE "https://cs3103.cs.unb.ca:8013/users/1/validated-emails" \
 curl -X GET "https://cs3103.cs.unb.ca:8013/present-lists/search?occasion=Birthday&presentListName=John&dateCreated=2025" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE"
+
+
+
+
 
 
 WHERE IS ADD PRESENT????
@@ -198,10 +214,6 @@ curl -X DELETE "https://cs3103.cs.unb.ca:8013/users/1/validated-emails" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE"
 
--- GET /users/1/present-lists - Retrieve all present lists for a user
-curl -X GET "https://cs3103.cs.unb.ca:8013/users/1/present-lists" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
 
 -- POST /verification-tokens - Create a new verification token
 curl -X POST "https://cs3103.cs.unb.ca:8013/verification-tokens" \
@@ -222,15 +234,3 @@ curl -X POST "https://cs3103.cs.unb.ca:8013/verification-tokens/verify" \
 -- DELETE /verification-tokens/expired - Delete expired verification tokens
 curl -X DELETE "https://cs3103.cs.unb.ca:8013/verification-tokens/expired"
 
--- POST /Auth/Login - Authenticate user and start a session
-curl -k -X POST "https://cs3103.cs.unb.ca:8013/Auth/Login" \
-  -H "Content-Type: application/json" \
-  -d '{\
-    "username": "emilioc",\
-    "password": "emilioca"\
-  }' -i
-
--- POST /Auth/logout - Log out the user and destroy the session
-curl -X POST "https://cs3103.cs.unb.ca:8013/Auth/logout" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: sessionId=YOUR_SESSION_COOKIE"
