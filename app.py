@@ -41,9 +41,9 @@ def dashboardPage():
 def homePage():
     return render_template('login.html')
 ####################################################################################
-@app.route('/presentlist/<int:list_id>')
-def view_present_list(list_id):
-    return render_template('presentlist.html', list_id=list_id)
+#@app.route('/presentlist/<int:list_id>')
+#def view_present_list(list_id):
+#    return render_template('presentlist.html', list_id=list_id)
 
 ####################################################################################
 @app.route('/settings')
@@ -182,6 +182,17 @@ class User(Resource):
         except Exception as e:
             abort(500, message="Error updating user information: " + str(e))
 
+class UserPresentLists(Resource):
+    def get(self, id):
+        sqlProc = "getListsByUserID"
+        sqlArgs = [id]
+
+        try:
+            present_lists = db_access(sqlProc, sqlArgs)  # Call stored procedure
+            return make_response(jsonify({'present_lists': present_lists}), 200)
+        except Exception as e:
+            abort(500, message=f"Error fetching present lists: {str(e)}")
+
 class PresentList(Resource):
     def get(self, list_id=None):
         if 'user_id' not in session:
@@ -207,7 +218,6 @@ class PresentList(Resource):
         except Exception as e:
             print(f"Error: {str(e)}")  # Log the error
             abort(500, message="Error fetching present lists")
-
 
     # Create a new Present List
     def post(self):
@@ -237,98 +247,64 @@ class PresentList(Resource):
             return make_response(jsonify({"status": "error", "message": f"Error creating present list: {str(e)}"}), 500)
 
     # Delete Present List by ID
-    def delete(self, id):
+    def delete(self, list_id):
         if 'user_id' not in session:
             abort(401, message="Unauthorized: Please log in")
-        
-        if not id:
+
+        if not list_id:
             abort(400, message="Present List ID is required")
 
         user_id = session['user_id']  # Get the user_id from the session
 
         # Check if the present list belongs to the logged-in user
-        sqlProc = 'getListByUserID'  # Use the procedure to check ownership
-        sqlArgs = [user_id, id]
+        sqlProc = 'getListByUserID'  # Procedure to check ownership
+        sqlArgs = [user_id, list_id]
 
+        ownership_check = db_access(sqlProc, sqlArgs)
+
+        if not ownership_check:
+            abort(403, message="Forbidden: You can only delete your own present lists")  # Move outside try-except
+
+        # Proceed with deletion if the list belongs to the user
         try:
-            ownership_check = db_access(sqlProc, sqlArgs)
-            if not ownership_check:
-                abort(403, message="Forbidden: You can only delete your own present lists")
-            
-            # Proceed with deletion if the list belongs to the user
-            sqlProc = 'deleteList'  # Updated stored procedure for deletion
-            sqlArgs = [user_id, id]  # Pass userID and presentListID
+            sqlProc = 'deleteList'  # Stored procedure for deletion
+            sqlArgs = [list_id]  # Only list_id is needed
+
             result = db_access(sqlProc, sqlArgs)
+
             if result is None or result == 0:
                 abort(404, message="Present list not found")
-            
+
             return make_response(jsonify({"status": "success", "message": "Present list deleted"}), 200)
-        
+
         except Exception as e:
+            print(f"Error deleting list: {str(e)}")  # Log the actual error
             abort(500, message="Error deleting present list")
 
-    # Update Present List Contents (Add/Delete presents)
-    def put(self, id):
+
+    # Update (Replace) Present List Information
+    def put(self, list_id):
         if 'user_id' not in session:
             abort(401, message="Unauthorized: Please log in")
-        
-        if not id:
+
+        if not list_id:
             abort(400, message="Present List ID is required")
 
-        user_id = session['user_id']  # Get the user_id from the session
-
-        # Check if the present list belongs to the logged-in user
-        sqlProc = 'getListByUserID'  # Use the procedure to check ownership
-        sqlArgs = [user_id, id]
-        
-        try:
-            ownership_check = db_access(sqlProc, sqlArgs)
-            if not ownership_check:
-                abort(403, message="Forbidden: You can only update your own present lists")
-            
-            # Proceed with update if the list belongs to the user
-            add_present_name = request.json.get('addPresent')
-            delete_present_name = request.json.get('deletePresent')
-
-            update_data = {}
-            if add_present_name:
-                update_data['addPresent'] = add_present_name
-            if delete_present_name:
-                update_data['deletePresent'] = delete_present_name
-
-            sqlProc = 'updatePresentListContents'  # You may need to create a procedure for this
-            sqlArgs = [id, update_data]  # Pass the ID and update data
-
-            result = db_access(sqlProc, sqlArgs)
-            return make_response(jsonify({"status": "success", "message": "Present list contents updated"}), 200)
-
-        except Exception as e:
-            abort(500, message="Error updating present list contents")
-
-    # Update Present List Information (Name, Occasion)
-    def patch(self, id):
-        if 'user_id' not in session:
-            abort(401, message="Unauthorized: Please log in")
-        if not id:
-            abort(400, message="Present List ID is required")
-
+        # Expect all fields for a full update
         new_name = request.json.get('name')
         new_occasion = request.json.get('occasion')
 
-        update_data = {}
-        if new_name:
-            update_data['name'] = new_name
-        if new_occasion:
-            update_data['occasion'] = new_occasion
+        if not new_name or not new_occasion:
+            abort(400, message="Both 'name' and 'occasion' fields are required")
 
-        sqlProc = 'updateList'  # Stored procedure to update present list info (name, occasion)
-        sqlArgs = [user_id, id, new_name, new_occasion]  # Pass the userID, ID, and update data
+        sqlProc = 'updateList'  # Stored procedure to update present list info
+        sqlArgs = [session['user_id'], list_id, new_name, new_occasion]  # Ensure all required fields are included
 
         try:
             db_access(sqlProc, sqlArgs)  # Update present list info in DB
             return make_response(jsonify({"status": "success", "message": "Present list updated"}), 200)
         except Exception as e:
-            abort(500, message="Error updating present list information")
+            abort(500, message=f"Error updating present list information: {str(e)}")
 
 class Login(Resource):
     def post(self):
@@ -424,7 +400,8 @@ api = Api(app)
 api.add_resource(Login, '/Auth/Login')
 api.add_resource(Logout, '/Auth/Logout')
 api.add_resource(User, "/user", "/user/<int:id>")
-api.add_resource(PresentList, '/presentlist')
+api.add_resource(UserPresentLists, "/user/<int:id>/presentlist")
+api.add_resource(PresentList, '/presentlist', "/presentlist/<int:list_id>")
 api.add_resource(Settings,"/user/update")
 api.add_resource(Present, '/present/<int:list_id>')
 

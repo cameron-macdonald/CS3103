@@ -13,44 +13,50 @@ ______________________________________________________________
 curl -k -X POST "https://cs3103.cs.unb.ca:8013/Auth/Login" \
   -H "Content-Type: application/json" \
   -d '{\
-    "username": "emilioc",\
-    "password": "emilioca"\
+    "username": "ThisClassIsCool",\
+    "password": "StrongPassword"\
   }'\
   -c cookies.txt -i
+_________________________________________________________________
+
 
 ________________________USERS_____________________________________
 
--- GET /users - Retrieve all users
-curl -k -X GET "https://cs3103.cs.unb.ca:8013/user" \
+-- GET /user - Retrieve all users
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/user/1" \
   -b cookies.txt
+__________________________________________________________________
 
--- POST /users - Add a new user
+-- POST /user - Add a new user
 curl -k -X POST "https://cs3103.cs.unb.ca:8013/user" \
   -H "Content-Type: application/json" \
   -b cookies.txt \
   -d '{\
-    "email": "d.d@asdjakdf.ca",\
-    "userName": "CamMacIsCool",\
-    "firstName": "Cam",\
-    "lastName": "Macdonald",\
+    "email": "testerman@test.ca",\
+    "username": "IamSoCool",\
+    "first": "Tester",\
+    "last": "Test",\
     "password": "StrongPassword"\
 }'
+__________________________________________________________________
+THIS WILL DELETE YOUR FIRST ACCOUNT 
+(Please Only do it if you really need to)
+(If so Login with the account created above if needed)
+__________________________________________________________________
+-- DELETE /user/37 - Delete an existing user
+curl -k -X DELETE "https://cs3103.cs.unb.ca:8013/user/37" \
+  -b cookies.txt
+___________________________________________________________________
 
--- DELETE /users/1 - Delete an existing user
-curl -X DELETE "https://cs3103.cs.unb.ca:8013/users/1" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
+--  GET /user/1 - Retrieve a specific user
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/user/1" \
+  -b cookies.txt
+__________________________________________________________________
 
---  GET /users/1 - Retrieve a specific user
-curl -X GET "https://cs3103.cs.unb.ca:8013/users/1" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
-
--- PUT /users/1 - Update an existing user
-curl -X PUT "https://cs3103.cs.unb.ca:8013/users/1" \
+-- PUT /user/1 - Update an existing user
+curl -k -X PUT "https://cs3103.cs.unb.ca:8013/user/37" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE" \
+  -b cookies.txt
   -d '{\
     "email": "janeemail@example.com",\
     "userName": "JaneLovesAPIs",\
@@ -58,6 +64,64 @@ curl -X PUT "https://cs3103.cs.unb.ca:8013/users/1" \
     "lastName": "Smith",\
     "password": "NewStrongPassword123"\
 }'
+____________________________________________________________________
+
+-- GET /user/22/presentlist - Retrieve all present lists for a user
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/user/22/presentlist" \
+  -b cookies.txt
+____________________________________________________________________
+
+
+
+
+___________________________PRESENT LISTS____________________________
+
+
+-- GET /presentlists - Retrieve all present lists
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/presentlist" \
+  -b cookies.txt
+_________________________________________________________________
+
+-- POST /presentlist - Add a new present list
+curl -k -X POST "https://cs3103.cs.unb.ca:8013/presentlist" \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{\
+    "name": "Little Timmys Birthday Wishlist",\
+    "occasion": "Birthday"\
+}'
+_________________________________________________________________
+
+-- GET /presentlists/{presentListId} - Retrieve a specific present list by ID
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/presentlist/6" \
+  -b cookies.txt
+
+_________________________________________________________________
+
+-- PUT /present-lists/{presentListId} - Update an existing present list
+curl -k -X PUT "https://cs3103.cs.unb.ca:8013/presentlist/5" \
+  -H "Content-Type: application/json" \
+  -b cookies.txt\
+  -d '{\
+    "name": "Johns Birthday",\
+    "occasion": "Birthday"\
+}'
+
+_____________________________________________________________________
+
+-- DELETE /present-lists/{presentListId} - Delete a present list by ID
+curl -k -X DELETE "https://cs3103.cs.unb.ca:8013/presentlist/8" \
+  -b cookies.txt
+
+
+
+
+
+
+IF DOWN HERE DOES NOT WORK YET
+_________________________________________________________________
+
+
 
 -- GET /users/search - Search for users based on optional criteria
 curl -X GET "https://cs3103.cs.unb.ca:8013/users/search?firstName=John&lastName=Cena&userName=U-cant-C-me&email=JohnCena@wwe.com&dateCreated=2025-01-01" \
@@ -78,50 +142,15 @@ curl -X DELETE "https://cs3103.cs.unb.ca:8013/users/1/validated-emails" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE"
 
--- GET /users/1/present-lists - Retrieve all present lists for a user
-curl -X GET "https://cs3103.cs.unb.ca:8013/users/1/present-lists" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
-
--- GET /present-lists - Retrieve all present lists
-curl -X GET "https://cs3103.cs.unb.ca:8013/present-lists" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
-
--- POST /present-lists - Add a new present list
-curl -X POST "https://cs3103.cs.unb.ca:8013/present-lists" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE" \
-  -d '{\
-    "presentListName": "Cam\'s Birthday Wishlist",\
-    "occasion": "Birthday"\
-}'
-
--- GET /present-lists/{presentListId} - Retrieve a specific present list by ID
-curl -X GET "https://cs3103.cs.unb.ca:8013/present-lists/{presentListId}" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
-
--- PUT /present-lists/{presentListId} - Update an existing present list
-curl -X PUT "https://cs3103.cs.unb.ca:8013/present-lists/{presentListId}" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE" \
-  -d '{\
-    "presentListName": "John\'s Birthday",\
-    "occasion": "Birthday"\
-}'
-
--- DELETE /present-lists/{presentListId} - Delete a present list by ID
-curl -X DELETE "https://cs3103.cs.unb.ca:8013/present-lists/{presentListId}" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
 
 -- GET /present-lists/search - Search for present lists based on optional parameters
 curl -X GET "https://cs3103.cs.unb.ca:8013/present-lists/search?occasion=Birthday&presentListName=John&dateCreated=2025" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE"
+
+
+WHERE IS ADD PRESENT????
+
 
 -- GET /presents - Retrieve all presents
 curl -X GET "https://cs3103.cs.unb.ca:8013/presents" \

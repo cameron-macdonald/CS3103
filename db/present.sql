@@ -22,8 +22,9 @@ END $$
 
 DELIMITER ;
 
-DELIMITER $$
 
+
+DELIMITER $$
 CREATE PROCEDURE addPresent(
     IN listID INT, 
     IN pName VARCHAR(255), 
