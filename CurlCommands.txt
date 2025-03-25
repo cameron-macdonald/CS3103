@@ -1,15 +1,35 @@
+______________________________________________________________
+_______________________________________________________________
+PLEASE CALL THE LOGIN CURL COMMAND FIRST
+
+Many of the endpoint are done so only a logged in user may use them
+Your seesion will be stored in cookies.txt
+
+PLEASE CALL THE LOGIN CURL COMMAND FIRST
+_________________________________________________________________
+______________________________________________________________
+
+-- POST /Auth/Login - Authenticate user and start a session
+curl -k -X POST "https://cs3103.cs.unb.ca:8013/Auth/Login" \
+  -H "Content-Type: application/json" \
+  -d '{\
+    "username": "emilioc",\
+    "password": "emilioca"\
+  }'\
+  -c cookies.txt -i
+
+________________________USERS_____________________________________
+
 -- GET /users - Retrieve all users
-curl -X GET "https://cs3103.cs.unb.ca:8013/users" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/user" \
+  -b cookies.txt
 
 -- POST /users - Add a new user
-curl -X POST "https://cs3103.cs.unb.ca:8013/users" \
+curl -k -X POST "https://cs3103.cs.unb.ca:8013/user" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE" \
+  -b cookies.txt \
   -d '{\
-    "email": "d.d@asdf.ca",\
+    "email": "d.d@asdjakdf.ca",\
     "userName": "CamMacIsCool",\
     "firstName": "Cam",\
     "lastName": "Macdonald",\
