@@ -404,18 +404,149 @@ class Settings(Resource):
             abort(500, message="Internal server error, please try again")
 
 class Present(Resource):
-    def get(self, list_id):
+    def get(self, present_id=None):
+        if present_id is None:
+            sqlProc = "getPresents"
+            sqlArgs = []
+        else:
+            sqlProc = "getPresentByID"
+            sqlArgs = [present_id]
+        try:
+            rows = db_access(sqlProc, sqlArgs)  # Fetch users from DB
+
+            for row in rows:
+                row.pop("password", None)  # Removes 'password' key if it exists
+
+        except Exception as e:
+            abort(500, message=str(e))  # Return server error
+
+        return make_response(jsonify({'presents': rows}), 200)  # Return JSON response
+
+    def put(self, present_id):
         if 'user_id' not in session:
             abort(401, message="Unauthorized: Please log in")
 
-        sqlProc = 'getPresentsByListID'
-        sqlArgs = [list_id]
+        # Ensure that the body of the request contains the necessary fields
+        if not request.json or 'presentName' not in request.json or 'description' not in request.json or 'status' not in request.json or 'priority' not in request.json:
+            abort(400, message="Missing required fields: 'presentName', 'description', 'status', 'priority'")
+
+        present_name = request.json.get('presentName')
+        description = request.json.get('description')
+        status = request.json.get('status')
+        priority = request.json.get('priority')
+
+        # Update the present information in the database
+        sqlProc = 'updatePresent'  # Assuming a stored procedure that updates a present
+        sqlArgs = [present_name, description, status, priority, present_id]
 
         try:
+            # Execute the stored procedure to update the present in the database
             result = db_access(sqlProc, sqlArgs)
-            return make_response(jsonify(result), 200) if result else make_response(jsonify([]), 200)
+
+            if result is None or result == 0:
+                abort(404, message="Present not found")  # Not found
+
+            return make_response(jsonify({"status": "success", "message": "Present updated successfully"}), 200)
+
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Error updating present: " + str(e))
+    
+    def delete(self, present_id):
+        # Ensure user is logged in
+        if 'user_id' not in session:
+            abort(401, message="Unauthorized: Please log in")  # 401 Unauthorized
+		
+        if present_id is None:
+            abort(400, message="Present id is required")  # Bad request
+
+        sqlProc = "deletePresent"  # Stored procedure to delete a user
+        sqlArgs = [present_id]
+
+        try:
+            result = db_access(sqlProc, sqlArgs)  # Call DB function
+
+            if result is None or result == 0:  # Check if user existed
+                abort(404, message="Present not found")  # Not found
+
+            return make_response(jsonify({"status": "success", "message": "Present deleted"}), 200)
+
+        except Exception as e:
+            abort(500, message=str(e))  # Server error
+
+    def post(self):
+        if 'user_id' not in session:
+            abort(401, message="Unauthorized: Please log in")  # 401 Unauthorized
+		
+        # Ensure that the body of the request contains the necessary fields
+        if not request.json or 'presentListID' not in request.json or 'presentName' not in request.json or 'description' not in request.json or 'status' not in request.json or 'priority' not in request.json:
+            abort(400, message="Missing required fields: 'presentListID', 'presentName', 'description', 'status', 'priority'")
+
+        present_list_id = request.json.get('presentListID')
+        present_name = request.json.get('presentName')
+        description = request.json.get('description')
+        status = request.json.get('status')
+        priority = request.json.get('priority')
+
+        # Call the stored procedure to add a new present to the database
+        sqlProc = 'addPresent'
+        sqlArgs = [present_list_id, present_name, description, status, priority]
+
+        try:
+            # Execute the stored procedure to insert the new present
+            result = db_access(sqlProc, sqlArgs)
+
+            # If the result is not valid, we handle the error
+            if result is None or result == 0:
+                abort(500, message="Failed to add present")  # Server error
+
+            return make_response(jsonify({"status": "success", "message": "Present added successfully"}), 201)
+
+        except Exception as e:
+            abort(500, message="Error adding present: " + str(e))  # Server error
+    
+    def get(self):
+        # Extract search parameters from the query string (optional)
+        present_name = request.args.get('presentName', None)
+        description = request.args.get('description', None)
+        status = request.args.get('status', None)
+        priority = request.args.get('priority', None)
+        present_list_id = request.args.get('presentListID', None)
+
+        # Convert status and priority to appropriate types if provided
+        if status is not None:
+            status = True if status.lower() == 'true' else False
+        
+        if priority is not None:
+            priority = int(priority)
+        
+        if present_list_id is not None:
+            present_list_id = int(present_list_id)
+
+        # Call the stored procedure with the parameters
+        sqlProc = 'searchPresents'
+        sqlArgs = [present_name, description, status, priority, present_list_id]
+
+        try:
+            # Fetch the presents from the database based on the search criteria
+            rows = db_access(sqlProc, sqlArgs)
+
+            return make_response(jsonify({'presents': rows}), 200)
+
+        except Exception as e:
+            abort(500, message="Error searching presents: " + str(e))
+
+    # def get(self, list_id):
+    #     if 'user_id' not in session:
+    #         abort(401, message="Unauthorized: Please log in")
+
+    #     sqlProc = 'getPresentsByListID'
+    #     sqlArgs = [list_id]
+
+    #     try:
+    #         result = db_access(sqlProc, sqlArgs)
+    #         return make_response(jsonify(result), 200) if result else make_response(jsonify([]), 200)
+    #     except Exception as e:
+    #         abort(500, message=str(e))
 
 def generate_verification_token(user_id):
     # Create a token using the user ID and a random salt
@@ -493,7 +624,7 @@ api.add_resource(User, "/user", "/user/<int:id>")
 api.add_resource(UserPresentLists, "/user/<int:id>/presentlist")
 api.add_resource(PresentList, '/presentlist', "/presentlist/<int:list_id>")
 api.add_resource(Settings,"/user/update")
-api.add_resource(Present, '/present/<int:list_id>')
+api.add_resource(Present, '/present', '/present/<int:present_id>')
 
 #############################################################################
 if __name__ == "__main__":
