@@ -12,6 +12,7 @@ import hashlib
 import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta
 
 import settings # Our server and db settings, stored in settings.py
 from flask import render_template
@@ -57,38 +58,21 @@ def settingsPage():
     else:
         return render_template('login.html')  # Make sure 'home' is a valid route
 ####################################################################################
-@app.route("/verification-tokens", methods=["POST"])
-def create_verification_token():
-    user_id = request.json["userId"]
-    token = generate_verification_token(user_id)
-    return jsonify({"token": token})
-
-@app.route("/verification-tokens/verify", methods=["POST"])
+@app.route("/verification-tokens/verify", methods=["GET"])
 def verify_email_token():
-    user_id = request.json["userId"]
-    token = request.json["token"]
+    user_id = request.args.get("userId", type=int)
+    token = request.args.get("token")
+
+    if not user_id or not token:
+        return jsonify({"message": "Missing userId or token"}), 400
+
+    # Verify the token
     success, message = verify_token(user_id, token)
+
     if success:
-        return jsonify({"message": message}), 200
-    return jsonify({"message": message}), 400
-
-@app.route("/users/<int:user_id>/validated-emails", methods=["POST"])
-def add_validated_email_route(user_id):
-    email = request.json["email"]
-    add_validated_email(user_id, email)
-    return jsonify({"message": "Email validated successfully"}), 200
-
-@app.route("/users/<int:user_id>/validated-emails", methods=["DELETE"])
-def remove_validated_email_route(user_id):
-    email = request.json["email"]
-    remove_validated_email(user_id, email)
-    return jsonify({"message": "Email removed successfully"}), 200
-
-@app.route("/verification-tokens/expired", methods=["DELETE"])
-def cleanup_expired_tokens_route():
-    delete_expired_tokens()
-    return jsonify({"message": "Expired tokens cleaned up"}), 200
-
+        return jsonify({"message": "Email verified successfully!"}), 200
+    return jsonify({"message": "Invalid or expired token"}), 400
+####################################################################################
 #
 # Error handlers
 #
@@ -125,14 +109,11 @@ class User(Resource):
 
         try:
             result = db_access(sqlProc, sqlArgs)  
-            user_id = result[0]  # Extract the user ID
+            user_id = result[0]["id"]
 
+            #Send all the email verification stuff
             verification_token = generate_verification_token(user_id)
-
-            # Construct the verification link (update the base URL)
             verification_link = f"https://cs3103.cs.unb.ca:8013/verification-tokens/verify?userId={user_id}&token={verification_token}"
-
-            # Send the verification email with the link
             send_verification_email(email, verification_link)
 
             return make_response(jsonify({"status": "success", "user_id": user_id}), 201)
@@ -441,13 +422,19 @@ def generate_verification_token(user_id):
     salt = os.urandom(16)
     token = hashlib.sha256(f"{user_id}{salt}".encode()).hexdigest()
 
-    # Set token expiration (e.g., 1 hour)
+    # Set token expiration (1 hour from now)
     expiration_time = datetime.utcnow() + timedelta(hours=1)
-    
-    save_verification_token(user_id, token, expiration_time)
+
+    sqlProc = "save_verification_token"
+    sqlArgs = [user_id, token, expiration_time]
+
+    try:
+        db_access(sqlProc, sqlArgs)
+    except Exception as e:
+        print(f"Error saving token: {e}")
 
     return token
-    
+ 
 def send_verification_email(to_email, verification_link):
     # Set up the server and login details
     smtp_server = "smtp.unb.ca"
@@ -455,7 +442,7 @@ def send_verification_email(to_email, verification_link):
 
     from_email = "CS3103@unb.ca"  # Your email address
     subject = "Email Verification for Present Registery"
-    body = f"Please verify your email by clicking the link:"
+    body = f"Please verify your email by clicking the link: {verification_link}"
 
     # Create the message
     message = MIMEMultipart()
@@ -473,41 +460,27 @@ def send_verification_email(to_email, verification_link):
     except Exception as e:
         print(f"Failed to send email: {e}")
 
-# Function to verify the token
 def verify_token(user_id, token):
-    # Retrieve token details from the database
-    token_data = get_verification_token(user_id, token)
-    
-    if not token_data:
-        return False, "Invalid token"
+    # Query the database for a matching token
+    sqlProc = "get_verification_token"
+    sqlArgs = [user_id, token]
 
-    # Check if the token is expired
-    if token_data['expiration_time'] < datetime.utcnow():
-        return False, "Token expired"
+    result = db_access(sqlProc, sqlArgs)
 
-    # Mark the email as verified in your database
-    mark_email_verified(user_id)
+    if not result:
+        return False, "Invalid or expired token"
 
-    # Optionally delete the token after it's verified
-    delete_verification_token(user_id, token)
+    token_data = result[0]
 
-    return True, "Email verified successfully"
+    # Check if the token has expired
+    expires_at = token_data["expires_at"]
+    if datetime.utcnow() > expires_at:
+        return False, "Token has expired"
 
-# Function to add the validated email
-def add_validated_email(user_id, email):
-    # Assuming you have a database function `save_validated_email`
-    save_validated_email(user_id, email)
+    # Mark email as verified (assuming another procedure exists)
+    db_access("mark_email_verified", [user_id])
 
-# Function to remove the validated email
-def remove_validated_email(user_id, email):
-    # Assuming you have a database function `delete_validated_email`
-    delete_validated_email(user_id, email)
-
-# Function to delete expired tokens
-def delete_expired_tokens():
-    # Assuming you have a database function `cleanup_expired_tokens`
-    cleanup_expired_tokens()
-
+    return True, "Email verified"
 
 ####################################################################################
 #

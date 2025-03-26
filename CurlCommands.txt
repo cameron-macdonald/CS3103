@@ -1,4 +1,12 @@
-______________________________________________________________
+_____
+curl -k -X POST "https://cs3103.cs.unb.ca:8013/Auth/Login" \
+  -H "Content-Type: application/json" \
+  -d '{\
+    "username": "g8mej",\
+    "password": "short+718=Candle"\
+  }'\
+  -c cookies.txt -i
+_________________________________________________________
 _______________________________________________________________
 PLEASE CALL THE LOGIN CURL COMMAND FIRST
 

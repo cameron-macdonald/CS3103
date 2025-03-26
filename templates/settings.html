@@ -38,35 +38,36 @@
     
     <div class="container">
         <h1>Update Your Information</h1>
-
+    
         <!-- Form to update user information -->
         <form id="update-form" class="settings-form">
             <div class="mb-3">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" class="form-control" value="{{ username }}" required>
             </div>
-
+    
             <div class="mb-3">
                 <label for="first_name">First Name:</label>
                 <input type="text" id="first_name" name="first_name" class="form-control" value="{{ first_name }}" required>
             </div>
-
+    
             <div class="mb-3">
                 <label for="last_name">Last Name:</label>
                 <input type="text" id="last_name" name="last_name" class="form-control" value="{{ last_name }}" required>
             </div>
-
+    
             <div class="mb-3">
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" class="form-control" value="{{ email }}" required>
-                <button type="submit" class="btn btn-primary">Verify Email</button>
+                <input type="email" id="email" name="email" class="form-control" value="{{ email }}" required readonly>
+                <span id="email-status"></span> <!-- To display email verification status -->
+                <button type="button" id="verify-email-btn" class="btn btn-primary" disabled>Verify Email</button>
             </div>
-
+    
             <div class="mb-3">
                 <label for="old_password">Old Password:</label>
                 <input type="password" id="old_password" name="old_password" class="form-control" required>
             </div>
-
+    
             <div class="mb-3">
                 <label for="new_password">New Password:</label>
                 <input type="password" id="new_password" name="new_password" class="form-control"
@@ -78,27 +79,38 @@
             </div>
         </form>
     </div>
-
+    
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             // Fetch user data when the page loads
-    
-            fetch('/user/update', {
+            fetch('/user/update', {  // Assuming /user/me returns the logged-in user's data
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                }
+                },
+                credentials: 'include'  // To send session cookies
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
                     const user = data.data;
-
+    
                     // Populate the form fields with user data
                     document.getElementById('username').value = user.username || '';
                     document.getElementById('first_name').value = user.firstName || '';
                     document.getElementById('last_name').value = user.lastName || '';
-                    document.getElementById('email').value = user.emailAdress || ''; // Fix field name
+                    document.getElementById('email').value = user.emailAdress || '';
+    
+                    // Check email verification status
+                    if (user.email_verified) {
+                        document.getElementById('email-status').textContent = 'Verified';
+                        document.getElementById('email-status').style.color = 'green';
+                        document.getElementById('verify-email-btn').disabled = true;  // Disable button if email is verified
+                    } else {
+                        document.getElementById('email-status').textContent = 'Not Verified';
+                        document.getElementById('email-status').style.color = 'red';
+                        document.getElementById('verify-email-btn').disabled = false;  // Enable button if email is not verified
+                    }
                 } else {
                     alert('Failed to fetch user data');
                 }
@@ -107,24 +119,52 @@
                 console.error('Error fetching user data:', error);
                 alert('Error fetching user information');
             });
-        });
     
-        document.getElementById('update-form').addEventListener('submit', function (event) {
-            event.preventDefault();
+            // Handle email verification when the button is clicked
+            document.getElementById('verify-email-btn').addEventListener('click', function () {
+                const email = document.getElementById('email').value;
     
-            const formData = new FormData(event.target);
-            const data = {};
-            formData.forEach((value, key) => {
-                data[key] = value;
+                fetch('/user/verify-email', {  // Assuming this endpoint sends a verification email
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Verification email sent!');
+                        document.getElementById('email-status').textContent = 'Verification email sent, please check your inbox.';
+                        document.getElementById('email-status').style.color = 'blue';
+                        document.getElementById('verify-email-btn').disabled = true;
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error sending verification email');
+                });
             });
     
-            fetch('/user/update', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            })
+            // Handle form submission for updating user information
+            document.getElementById('update-form').addEventListener('submit', function (event) {
+                event.preventDefault();
+    
+                const formData = new FormData(event.target);
+                const data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+    
+                fetch('/user/update', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
@@ -137,8 +177,28 @@
                     console.error('Error:', error);
                     alert('Error updating information');
                 });
+            });
         });
-    </script>
+
+        document.getElementById("logout-btn").addEventListener("click", function (event) {
+        fetch("/Auth/Logout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include"
+        })
+            .then(response => response.json())
+            .then(data => {
+            if (data.status === "success") {
+                alert("Logout successful!");
+                window.location.href = "/login";
+            } else {
+                alert("Logout failed!");
+            }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+
+    </script>    
     
 </body>
 
