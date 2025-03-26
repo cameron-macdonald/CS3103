@@ -332,6 +332,38 @@ class PresentList(Resource):
         except Exception as e:
             abort(500, message=f"Error updating present list information: {str(e)}")
 
+class PresentListSearch(Resource):
+    def get(self):
+        # Extract search parameters from the query string (optional)
+        present_name = request.args.get('presentName', None)
+        description = request.args.get('description', None)
+        status = request.args.get('status', None)
+        priority = request.args.get('priority', None)
+        present_list_id = request.args.get('presentListID', None)
+
+        # Convert status and priority to appropriate types if provided
+        if status is not None:
+            status = True if status.lower() == 'true' else False
+        
+        if priority is not None:
+            priority = int(priority)
+        
+        if present_list_id is not None:
+            present_list_id = int(present_list_id)
+
+        # Call the stored procedure with the parameters
+        sqlProc = 'searchPresents'
+        sqlArgs = [present_name, description, status, priority, present_list_id]
+
+        try:
+            # Fetch the presents from the database based on the search criteria
+            rows = db_access(sqlProc, sqlArgs)
+
+            return make_response(jsonify({'presents': rows}), 200)
+
+        except Exception as e:
+            abort(500, message="Error searching presents: " + str(e))
+
 class Login(Resource):
     def post(self):
         if not request.json or 'username' not in request.json or 'password' not in request.json:
@@ -504,6 +536,7 @@ class Present(Resource):
         except Exception as e:
             abort(500, message="Error adding present: " + str(e))  # Server error
     
+class PresentSearch(Resource):
     def get(self):
         # Extract search parameters from the query string (optional)
         present_name = request.args.get('presentName', None)
@@ -534,6 +567,7 @@ class Present(Resource):
 
         except Exception as e:
             abort(500, message="Error searching presents: " + str(e))
+
 
     # def get(self, list_id):
     #     if 'user_id' not in session:
@@ -621,10 +655,14 @@ api = Api(app)
 api.add_resource(Login, '/Auth/Login')
 api.add_resource(Logout, '/Auth/Logout')
 api.add_resource(User, "/user", "/user/<int:id>")
+api.add_resource(UserSearch, '/user/search')
 api.add_resource(UserPresentLists, "/user/<int:id>/presentlist")
 api.add_resource(PresentList, '/presentlist', "/presentlist/<int:list_id>")
+api.add_resource(PresentListSearch, '/presentlist/search')
 api.add_resource(Settings,"/user/update")
 api.add_resource(Present, '/present', '/present/<int:present_id>')
+api.add_resource(PresentSearch, '/present/search')
+
 
 #############################################################################
 if __name__ == "__main__":
