@@ -123,9 +123,47 @@ curl -k -X DELETE "https://cs3103.cs.unb.ca:8013/presentlist/8" \
 
 _____________________________________________________________________
 
+________________________________PRESENTS_________________________
 
+-- GET /presents - Retrieve all presents
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/present" \
+  -b cookies.txt
 
+-- GET /presents/{presentId} - Retrieve a specific present by ID
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/present/1" \
+  -b cookies.txt
 
+-- PUT /presents/{presentId} - Update an existing present
+curl -k -X PUT "https://cs3103.cs.unb.ca:8013/present/2" \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{\
+    "presentName": "Xbox One",\
+    "description": "Old gaming console to play with my friends",\
+    "status": true,\
+    "priority": 1\
+  }'
+
+-- POST /presents - Add a new present
+curl -k -X POST "https://cs3103.cs.unb.ca:8013/present" \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{\
+    "presentListID": 1,\
+    "presentName": "PlayStation 5",\
+    "description": "Latest gaming console for next-gen gaming",\
+    "status": true,\
+    "priority": 2\
+  }'
+
+-- DELETE /present/{presentId} - Delete a present by ID
+curl -k -X DELETE "https://cs3103.cs.unb.ca:8013/present/5" \
+  -b cookies.txt
+
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/present/search?presentName=Xbox&status=true" \
+  -b cookies.txt
+
+  
 ___________________________________________________________________
 -- POST /Auth/logout - Log out the user and destroy the session
 curl -k -X POST "https://cs3103.cs.unb.ca:8013/Auth/Logout" \
@@ -145,8 +183,7 @@ _________________________________________________________________
 
 -- GET /users/search - Search for users based on optional criteria
 curl -X GET "https://cs3103.cs.unb.ca:8013/users/search?firstName=John&lastName=Cena&userName=U-cant-C-me&email=JohnCena@wwe.com&dateCreated=2025-01-01" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
+  -b cookies.txt
 
 -- POST /users/1/validated-emails - Add a validated email for a user
 curl -X POST "https://cs3103.cs.unb.ca:8013/users/1/validated-emails" \
@@ -169,42 +206,8 @@ curl -X GET "https://cs3103.cs.unb.ca:8013/present-lists/search?occasion=Birthda
   -H "Cookie: YOUR_COOKIE"
 
 
-
-
-
-
-WHERE IS ADD PRESENT????
-
-
--- GET /presents - Retrieve all presents
-curl -X GET "https://cs3103.cs.unb.ca:8013/presents" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
-
--- GET /presents/{presentId} - Retrieve a specific present by ID
-curl -X GET "https://cs3103.cs.unb.ca:8013/presents/{presentId}" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
-
--- PUT /presents/{presentId} - Update an existing present
-curl -X PUT "https://cs3103.cs.unb.ca:8013/presents/{presentId}" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE" \
-  -d '{\
-    "presentName": "Xbox One",\
-    "description": "Old gaming console to play with my friends",\
-    "status": true,\
-    "priority": 1\
-  }'
-
--- DELETE /presents/{presentId} - Delete a present by ID
-curl -X DELETE "https://cs3103.cs.unb.ca:8013/presents/{presentId}" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
-
--- GET /presents/search - Search for presents based on optional parameters
-curl -X GET "https://cs3103.cs.unb.ca:8013/presents/search?presentListId=1741&presentName=PS4&status=true&priority=1" \
+-- GET /present/search - Search for present based on optional parameters
+curl -X GET "https://cs3103.cs.unb.ca:8013/present/search?presentListId=1741&presentName=PS4&status=true&priority=1" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE"
 
