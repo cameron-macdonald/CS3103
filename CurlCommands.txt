@@ -160,7 +160,7 @@ curl -k -X POST "https://cs3103.cs.unb.ca:8013/present" \
 curl -k -X DELETE "https://cs3103.cs.unb.ca:8013/present/5" \
   -b cookies.txt
 
-curl -k -X GET "https://cs3103.cs.unb.ca:8013/present/search?presentName=Xbox&status=true" \
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/present/search?presentName=Smartwatch&status=true" \
   -b cookies.txt
 
   
@@ -205,11 +205,6 @@ curl -X GET "https://cs3103.cs.unb.ca:8013/present-lists/search?occasion=Birthda
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE"
 
-
--- GET /present/search - Search for present based on optional parameters
-curl -X GET "https://cs3103.cs.unb.ca:8013/present/search?presentListId=1741&presentName=PS4&status=true&priority=1" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
 
 -- POST /users/1/validated-emails - Add a validated email for a user
 curl -X POST "https://cs3103.cs.unb.ca:8013/users/1/validated-emails" \
