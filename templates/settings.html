@@ -82,6 +82,8 @@
     
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            let userId = null; // Store user ID globally
+
             // Fetch user data when the page loads
             fetch('/user/update', {  // Assuming /user/me returns the logged-in user's data
                 method: 'GET',
@@ -94,6 +96,7 @@
             .then(data => {
                 if (data.status === 'success') {
                     const user = data.data;
+                    userId = user.userID;  // Store the user ID
     
                     // Populate the form fields with user data
                     document.getElementById('username').value = user.username || '';
@@ -121,31 +124,52 @@
             });
     
             // Handle email verification when the button is clicked
-            document.getElementById('verify-email-btn').addEventListener('click', function () {
+            document.getElementById('verify-email-btn').addEventListener('click', async function () {
                 const email = document.getElementById('email').value;
-    
-                fetch('/user/verify-email', {  // Assuming this endpoint sends a verification email
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email: email }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
+
+                try {
+
+                    // Step 1: Request the token
+                    const tokenResponse = await fetch(`/verification-token/${userId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const tokenData = await tokenResponse.json();
+
+                    if (!tokenData.token) {
+                        alert("Error generating token!");
+                        return;
+                    }
+
+                    const verificationLink = `https://cs3103.cs.unb.ca:8013/verification-token/verify?userId=${userId}&token=${tokenData.token}`;
+
+                    // Step 2: Send the verification email
+                    const emailResponse = await fetch('/send-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email: email, verification_link: verificationLink }),
+                    });
+
+                    const emailData = await emailResponse.json();
+                    console.log("Email Response:", emailData);  // Debugging
+
+                    if (emailData.message === "Email sent successfully!") {
                         alert('Verification email sent!');
                         document.getElementById('email-status').textContent = 'Verification email sent, please check your inbox.';
                         document.getElementById('email-status').style.color = 'blue';
                         document.getElementById('verify-email-btn').disabled = true;
                     } else {
-                        alert('Error: ' + data.message);
+                        alert('Error: ' + emailData.error);
                     }
-                })
-                .catch(error => {
+                } catch (error) {
                     console.error('Error:', error);
                     alert('Error sending verification email');
-                });
+                }
             });
     
             // Handle form submission for updating user information

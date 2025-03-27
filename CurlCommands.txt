@@ -1,11 +1,3 @@
-_____
-curl -k -X POST "https://cs3103.cs.unb.ca:8013/Auth/Login" \
-  -H "Content-Type: application/json" \
-  -d '{\
-    "username": "g8mej",\
-    "password": "short+718=Candle"\
-  }'\
-  -c cookies.txt -i
 _________________________________________________________
 _______________________________________________________________
 PLEASE CALL THE LOGIN CURL COMMAND FIRST
@@ -163,13 +155,29 @@ curl -k -X DELETE "https://cs3103.cs.unb.ca:8013/present/5" \
 curl -k -X GET "https://cs3103.cs.unb.ca:8013/present/search?presentName=Smartwatch&status=true" \
   -b cookies.txt
 
-  
-___________________________________________________________________
+
+__________________EMAIL VERIFICATION______________________________
+
+
+-- GET /verification-tokens - Create a new verification token
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/verification-token/21" \
+  -H "Content-Type: application/json" \
+  -b cookies.txt
+
+__________FOR THE NEXT ONE TO WORK PLEASE PASTE YOUR TOKEN RECIEVED FROM ABOVE__________________
+
+-- GET /verification-token/verify - Verify a token and validate email
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/verification-token/verify?userId=21&token=PASTE HERE"
+
+
+______________________________LOGOUT_____________________________________
+
 -- POST /Auth/logout - Log out the user and destroy the session
 curl -k -X POST "https://cs3103.cs.unb.ca:8013/Auth/Logout" \
   -b cookies.txt
 
 ___________________________________________________________________
+
 
 
 
@@ -185,58 +193,10 @@ _________________________________________________________________
 curl -X GET "https://cs3103.cs.unb.ca:8013/users/search?firstName=John&lastName=Cena&userName=U-cant-C-me&email=JohnCena@wwe.com&dateCreated=2025-01-01" \
   -b cookies.txt
 
--- POST /users/1/validated-emails - Add a validated email for a user
-curl -X POST "https://cs3103.cs.unb.ca:8013/users/1/validated-emails" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE" \
-  -d '{\
-    "email": "d.d@asdf.ca"\
-}'
-
--- DELETE /users/1/validated-emails - Remove a validated email for a user
-curl -X DELETE "https://cs3103.cs.unb.ca:8013/users/1/validated-emails" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
 
 
 -- GET /present-lists/search - Search for present lists based on optional parameters
 curl -X GET "https://cs3103.cs.unb.ca:8013/present-lists/search?occasion=Birthday&presentListName=John&dateCreated=2025" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Cookie: YOUR_COOKIE"
-
-
--- POST /users/1/validated-emails - Add a validated email for a user
-curl -X POST "https://cs3103.cs.unb.ca:8013/users/1/validated-emails" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE" \
-  -d '{\
-    "email": "d.d@asdf.ca"\
-  }'
-
--- DELETE /users/1/validated-emails - Remove a validated email for a user
-curl -X DELETE "https://cs3103.cs.unb.ca:8013/users/1/validated-emails" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
-
-
--- POST /verification-tokens - Create a new verification token
-curl -X POST "https://cs3103.cs.unb.ca:8013/verification-tokens" \
-  -H "Content-Type: application/json" \
-  -d '{\
-    "userId": 123,\
-    "token": "abc123xyz456"\
-  }'
-
--- POST /verification-tokens/verify - Verify a token and validate email
-curl -X POST "https://cs3103.cs.unb.ca:8013/verification-tokens/verify" \
-  -H "Content-Type: application/json" \
-  -d '{\
-    "userId": 123,\
-    "token": "abc123xyz456"\
-  }'
-
--- DELETE /verification-tokens/expired - Delete expired verification tokens
-curl -X DELETE "https://cs3103.cs.unb.ca:8013/verification-tokens/expired"
 

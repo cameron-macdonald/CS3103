@@ -32,7 +32,6 @@ Session(app)
 @app.route('/')
 def registerPage():
     return render_template('index.html')
-
 ####################################################################################
 #Routing: to dashboard
 @app.route('/dashboard')
@@ -46,32 +45,12 @@ def dashboardPage():
 def homePage():
     return render_template('login.html')
 ####################################################################################
-#@app.route('/presentlist/<int:list_id>')
-#def view_present_list(list_id):
-#    return render_template('presentlist.html', list_id=list_id)
-
-####################################################################################
 @app.route('/settings')
 def settingsPage():
     if 'username' in session:
         return render_template('settings.html', username=session['username'])
     else:
         return render_template('login.html')  # Make sure 'home' is a valid route
-####################################################################################
-@app.route("/verification-tokens/verify", methods=["GET"])
-def verify_email_token():
-    user_id = request.args.get("userId", type=int)
-    token = request.args.get("token")
-
-    if not user_id or not token:
-        return jsonify({"message": "Missing userId or token"}), 400
-
-    # Verify the token
-    success, message = verify_token(user_id, token)
-
-    if success:
-        return jsonify({"message": "Email verified successfully!"}), 200
-    return jsonify({"message": "Invalid or expired token"}), 400
 ####################################################################################
 #
 # Error handlers
@@ -112,7 +91,8 @@ class User(Resource):
             user_id = result[0]["id"]
 
             #Send all the email verification stuff
-            verification_token = generate_verification_token(user_id)
+            response_data = generate_verification_token(user_id)  # Returns a dictionary
+            verification_token = response_data.get("token")  # Extract token    
             verification_link = f"https://cs3103.cs.unb.ca:8013/verification-tokens/verify?userId={user_id}&token={verification_token}"
             send_verification_email(email, verification_link)
 
@@ -582,6 +562,57 @@ class PresentSearch(Resource):
     #     except Exception as e:
     #         abort(500, message=str(e))
 
+class VerificationToken(Resource):
+    def get(self, id=None):
+        if not id:
+            return {"error": "Missing user_id"}, 400
+
+        return generate_verification_token(id)
+
+class Verify(Resource):
+    
+    def get(self):
+        user_id = request.args.get("userId", type=int)
+        token = request.args.get("token")
+
+        if not user_id or not token:
+            return {"message": "Missing userId or token"}, 400
+
+        # Verify token directly inside this method
+        sqlProc = "get_verification_token"
+        sqlArgs = [user_id, token]
+        result = db_access(sqlProc, sqlArgs)
+
+        if not result:
+            return {"message": "Invalid or expired token"}, 400
+
+        token_data = result[0]
+        expires_at = token_data["expires_at"]
+
+        if datetime.utcnow() > expires_at:
+            return {"message": "Token has expired"}, 400
+
+        # Mark email as verified
+        db_access("mark_email_verified", [user_id])
+
+        return {"message": "Email verified successfully!"}, 200
+
+class SendEmail(Resource):
+    def post(self):
+        data = request.get_json()
+
+        to_email = data.get("email")
+        verification_link = data.get("verification_link")
+
+        if not to_email or not verification_link:
+            return {"error": "Missing email or verification_link"}, 400
+
+        try:
+            send_verification_email(to_email, verification_link)
+            return {"message": "Email sent successfully!"}, 200
+        except Exception as e:
+            return {"error": f"Failed to send email: {str(e)}"}, 500
+
 def generate_verification_token(user_id):
     # Create a token using the user ID and a random salt
     salt = os.urandom(16)
@@ -596,9 +627,9 @@ def generate_verification_token(user_id):
     try:
         db_access(sqlProc, sqlArgs)
     except Exception as e:
-        print(f"Error saving token: {e}")
+        return {"error": f"Error saving token: {e}"}
 
-    return token
+    return {"token": token, "expires_at": expiration_time.isoformat()}
  
 def send_verification_email(to_email, verification_link):
     # Set up the server and login details
@@ -625,28 +656,6 @@ def send_verification_email(to_email, verification_link):
     except Exception as e:
         print(f"Failed to send email: {e}")
 
-def verify_token(user_id, token):
-    # Query the database for a matching token
-    sqlProc = "get_verification_token"
-    sqlArgs = [user_id, token]
-
-    result = db_access(sqlProc, sqlArgs)
-
-    if not result:
-        return False, "Invalid or expired token"
-
-    token_data = result[0]
-
-    # Check if the token has expired
-    expires_at = token_data["expires_at"]
-    if datetime.utcnow() > expires_at:
-        return False, "Token has expired"
-
-    # Mark email as verified (assuming another procedure exists)
-    db_access("mark_email_verified", [user_id])
-
-    return True, "Email verified"
-
 ####################################################################################
 #
 # Identify/create endpoints and endpoint objects
@@ -655,15 +664,16 @@ api = Api(app)
 api.add_resource(Login, '/Auth/Login')
 api.add_resource(Logout, '/Auth/Logout')
 api.add_resource(User, "/user", "/user/<int:id>")
-api.add_resource(UserSearch, '/user/search')
+#api.add_resource(UserSearch, '/user/search')
 api.add_resource(UserPresentLists, "/user/<int:id>/presentlist")
 api.add_resource(PresentList, '/presentlist', "/presentlist/<int:list_id>")
 api.add_resource(PresentListSearch, '/presentlist/search')
 api.add_resource(Settings,"/user/update")
 api.add_resource(Present, '/present', '/present/<int:present_id>')
 api.add_resource(PresentSearch, '/present/search')
-
-
+api.add_resource(VerificationToken, "/verification-token/<int:id>")
+api.add_resource(Verify, "/verification-token/verify")
+api.add_resource(SendEmail, "/send-email")
 #############################################################################
 if __name__ == "__main__":
 
