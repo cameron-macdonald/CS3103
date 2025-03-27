@@ -83,3 +83,29 @@ BEGIN
 END//
 
 DELIMITER ;
+
+
+--Search a user
+DELIMITER $$
+
+CREATE PROCEDURE searchUsers(
+    IN p_userID INT,
+    IN p_email VARCHAR(255),
+    IN p_firstName VARCHAR(255),
+    IN p_lastName VARCHAR(255),
+    IN p_username VARCHAR(255),
+    IN p_emailVerified BOOLEAN
+)
+BEGIN
+    SELECT userID, emailAdress, firstName, lastName, username, dateCreated, email_verified 
+    FROM users
+    WHERE 
+        (p_userID IS NULL OR userID = p_userID) AND
+        (p_email IS NULL OR emailAdress LIKE CONCAT('%', p_email, '%')) AND
+        (p_firstName IS NULL OR firstName LIKE CONCAT('%', p_firstName, '%')) AND
+        (p_lastName IS NULL OR lastName LIKE CONCAT('%', p_lastName, '%')) AND
+        (p_username IS NULL OR username LIKE CONCAT('%', p_username, '%')) AND
+        (p_emailVerified IS NULL OR email_verified = p_emailVerified);
+END $$
+
+DELIMITER ;

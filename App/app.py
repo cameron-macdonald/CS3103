@@ -195,6 +195,34 @@ class User(Resource):
         except Exception as e:
             abort(500, message="Error updating user information: " + str(e))
 
+class UserSearch(Resource):
+    def get(self):
+        user_id = request.args.get('userID', None)
+        email = request.args.get('email', None)
+        first_name = request.args.get('firstName', None)
+        last_name = request.args.get('lastName', None)
+        username = request.args.get('username', None)
+        email_verified = request.args.get('email_verified', None)
+
+        # Convert data types if necessary
+        if user_id is not None:
+            user_id = int(user_id)
+
+        if email_verified is not None:
+            email_verified = bool(int(email_verified))  # Convert '0' or '1' to Boolean
+
+        try:
+            # Call stored procedure with the provided parameters
+            sqlProc = 'searchUsers'  # Stored procedure for searching users
+            sqlArgs = [user_id, email, first_name, last_name, username, email_verified]
+            
+            rows = db_access(sqlProc, sqlArgs)  # Query DB
+
+            return make_response(jsonify({'users': rows}), 200)
+
+        except Exception as e:
+            abort(500, message=f"Error searching users: {str(e)}")
+
 class UserPresentLists(Resource):
     def get(self, id):
         sqlProc = "getListsByUserID"
@@ -322,34 +350,30 @@ class PresentList(Resource):
 class PresentListSearch(Resource):
     def get(self):
         # Extract search parameters from the query string (optional)
-        present_name = request.args.get('presentName', None)
-        description = request.args.get('description', None)
-        status = request.args.get('status', None)
-        priority = request.args.get('priority', None)
         present_list_id = request.args.get('presentListID', None)
+        user_id = request.args.get('userID', None)
+        name = request.args.get('name', None)
+        occasion = request.args.get('occasion', None)
+        date_created = request.args.get('dateCreated', None)
 
-        # Convert status and priority to appropriate types if provided
-        if status is not None:
-            status = True if status.lower() == 'true' else False
-        
-        if priority is not None:
-            priority = int(priority)
-        
+        # Convert data types if necessary
         if present_list_id is not None:
             present_list_id = int(present_list_id)
 
-        # Call the stored procedure with the parameters
-        sqlProc = 'searchPresents'
-        sqlArgs = [present_name, description, status, priority, present_list_id]
+        if user_id is not None:
+            user_id = int(user_id)
 
         try:
-            # Fetch the presents from the database based on the search criteria
-            rows = db_access(sqlProc, sqlArgs)
+            # Call stored procedure with the provided parameters
+            sqlProc = 'searchPresentLists'  # Stored procedure for searching present lists
+            sqlArgs = [present_list_id, user_id, name, occasion, date_created]
+            
+            rows = db_access(sqlProc, sqlArgs)  # Query DB
 
-            return make_response(jsonify({'presents': rows}), 200)
+            return make_response(jsonify({'present_lists': rows}), 200)
 
         except Exception as e:
-            abort(500, message="Error searching presents: " + str(e))
+            abort(500, message=f"Error searching present lists: {str(e)}")
 
 class Login(Resource):
     def post(self):
@@ -671,7 +695,7 @@ api = Api(app)
 api.add_resource(Login, '/Auth/Login')
 api.add_resource(Logout, '/Auth/Logout')
 api.add_resource(User, "/user", "/user/<int:id>")
-#api.add_resource(UserSearch, '/user/search')
+api.add_resource(UserSearch, '/user/search')
 api.add_resource(UserPresentLists, "/user/<int:id>/presentlist")
 api.add_resource(PresentList, '/presentlist', "/presentlist/<int:list_id>")
 api.add_resource(PresentListSearch, '/presentlist/search')

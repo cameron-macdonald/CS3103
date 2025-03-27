@@ -1,10 +1,3 @@
-CREATE TABLE verification_tokens (
-    id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    token VARCHAR(64) NOT NULL UNIQUE,
-    expires_at TIMESTAMP NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(userID) ON DELETE CASCADE
-);
 
 DELIMITER //
 

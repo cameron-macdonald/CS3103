@@ -64,6 +64,14 @@ curl -k -X PUT "https://cs3103.cs.unb.ca:8013/user/37" \
     "lastName": "Smith",\
     "password": "NewStrongPassword123"\
 }'
+
+_________________________________________________________________________
+
+-- GET /users/search - Search for users based on optional criteria
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/user/search?email_verified=1" \
+-H "Content-Type: application/json"\
+  -b cookies.txt
+
 ____________________________________________________________________
 
 -- GET /user/22/presentlist - Retrieve all present lists for a user
@@ -106,6 +114,12 @@ curl -k -X PUT "https://cs3103.cs.unb.ca:8013/presentlist/5" \
     "name": "Johns Birthday",\
     "occasion": "Birthday"\
 }'
+
+___________________________________________________________________
+
+-- GET /presentlist/search - Search for present lists based on optional parameters
+curl -k -X GET "https://cs3103.cs.unb.ca:8013/presentlist/search?occasion=Birthday" \
+  -b cookies.txt
 
 _____________________________________________________________________
 
@@ -170,6 +184,7 @@ __________FOR THE NEXT ONE TO WORK PLEASE PASTE YOUR TOKEN RECIEVED FROM ABOVE__
 curl -k -X GET "https://cs3103.cs.unb.ca:8013/verification-token/verify?userId=21&token=PASTE HERE"
 
 
+
 ______________________________LOGOUT_____________________________________
 
 -- POST /Auth/logout - Log out the user and destroy the session
@@ -177,26 +192,4 @@ curl -k -X POST "https://cs3103.cs.unb.ca:8013/Auth/Logout" \
   -b cookies.txt
 
 ___________________________________________________________________
-
-
-
-
-
-
-
-IF DOWN HERE DOES NOT WORK YET
-_________________________________________________________________
-
-
-
--- GET /users/search - Search for users based on optional criteria
-curl -X GET "https://cs3103.cs.unb.ca:8013/users/search?firstName=John&lastName=Cena&userName=U-cant-C-me&email=JohnCena@wwe.com&dateCreated=2025-01-01" \
-  -b cookies.txt
-
-
-
--- GET /present-lists/search - Search for present lists based on optional parameters
-curl -X GET "https://cs3103.cs.unb.ca:8013/present-lists/search?occasion=Birthday&presentListName=John&dateCreated=2025" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Cookie: YOUR_COOKIE"
 

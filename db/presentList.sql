@@ -91,3 +91,26 @@ BEGIN
     WHERE presentListID = listIDIn AND userID = userIDIn;
 END //
 DELIMITER ;
+
+
+--Search 
+DELIMITER $$
+
+CREATE PROCEDURE searchPresentLists(
+    IN p_presentListID INT,
+    IN p_userID INT,
+    IN p_name VARCHAR(255),
+    IN p_occasion VARCHAR(255),
+    IN p_dateCreated DATETIME
+)
+BEGIN
+    SELECT * FROM presentlists 
+    WHERE 
+        (p_presentListID IS NULL OR presentListID = p_presentListID) AND
+        (p_userID IS NULL OR userID = p_userID) AND
+        (p_name IS NULL OR name LIKE CONCAT('%', p_name, '%')) AND
+        (p_occasion IS NULL OR occasion LIKE CONCAT('%', p_occasion, '%')) AND
+        (p_dateCreated IS NULL OR dateCreated >= p_dateCreated);
+END $$
+
+DELIMITER ;
