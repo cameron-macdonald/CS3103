@@ -52,6 +52,13 @@ def settingsPage():
     else:
         return render_template('login.html')  # Make sure 'home' is a valid route
 ####################################################################################
+@app.route('/profile')
+def profilePage():
+    if 'username' in session:
+        return render_template('presentlist.html', username=session['username'])
+    else:
+        return render_template('login.html')  # Make sure 'home' is a valid route
+####################################################################################
 #
 # Error handlers
 #
