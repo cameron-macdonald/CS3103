@@ -77,6 +77,11 @@
             <div class="mb-3">
                 <button type="submit" class="btn btn-primary">Update Information</button>
             </div>
+            <--! deleting account>
+            <br>
+            <div class="mb-3">
+                <button type="button" id="delete-account-btn" class="btn btn-danger">Delete Account</button>
+            </div>
         </form>
     </div>
     
@@ -169,6 +174,35 @@
                 } catch (error) {
                     console.error('Error:', error);
                     alert('Error sending verification email');
+                }
+            });
+
+            // handle deleting account
+            document.getElementById('delete-account-btn').addEventListener('click', function () {
+                const confirmDelete = confirm('Are you sure you want to delete your account? This action cannot be undone.');
+                if (confirmDelete) {
+                    // Send the request to delete the account
+                    fetch('/user/delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',  // Include session cookies to ensure the request is for the authenticated user
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert('Your account has been deleted successfully!');
+                            window.location.href = '/login';  // Redirect to login page after account deletion
+                        }
+                        else {
+                            alert('Error deleting account: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting account:', error);
+                        alert('Error deleting account');
+                    });
                 }
             });
     
