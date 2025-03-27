@@ -182,7 +182,7 @@
                 const confirmDelete = confirm('Are you sure you want to delete your account? This action cannot be undone.');
                 if (confirmDelete) {
                     // Send the request to delete the account
-                    fetch('/user/delete', {
+                    fetch('/user/${userId}', {
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
