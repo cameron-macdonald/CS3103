@@ -1,0 +1,30 @@
+Project/
+│
+├── App/
+│   ├── app.py
+│   ├── settings.py
+│   ├── db_util.py
+│   │
+│   ├── templates/
+│   │   ├── dashboard.html
+│   │   ├── index.html  //register
+│   │   ├── login.html
+│   │   ├── presentlist.html
+│   │   ├── settings.html
+│   │
+│   ├── static/
+│   │   ├── css/
+│   │   │   ├── styles.css
+│  
+├── db/
+│   ├── present.sql
+│   ├── presentList.sql
+│   ├── table.sql
+│   ├── user.sql
+│   ├── verification.sql
+│
+├── Documentation/
+│   ├── cookies.txt //written and read to by curl commands
+│   ├── CurlCommands.txt
+│   ├── DirectoryStructure.txt
+│   ├── ProjectAPI.yaml
