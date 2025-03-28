@@ -100,7 +100,7 @@ class User(Resource):
             #Send all the email verification stuff
             response_data = generate_verification_token(user_id)  # Returns a dictionary
             verification_token = response_data.get("token")  # Extract token    
-            verification_link = f"https://cs3103.cs.unb.ca:8013/verification-tokens/verify?userId={user_id}&token={verification_token}"
+            verification_link = f"https://cs3103.cs.unb.ca:8013/verification-token/verify?userId={user_id}&token={verification_token}"
             send_verification_email(email, verification_link)
 
             return make_response(jsonify({"status": "success", "user_id": user_id}), 201)
