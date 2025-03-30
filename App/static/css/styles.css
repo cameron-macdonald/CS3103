@@ -204,3 +204,9 @@ button.delete {
 button.delete:hover {
     background-color: #d32f2f;
 }
+
+/* Custom styling for the modal (Optional) */
+#viewPresentsModal .modal-body {
+    max-height: 400px;
+    overflow-y: auto;
+}
