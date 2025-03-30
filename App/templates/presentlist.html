@@ -12,66 +12,148 @@
 
 <body class="container-fluid">
     <nav class="navbar navbar-inverse navbar-fixed-top">
-    <div class="container-fluid">
-        <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-menu">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="#">CS3103 Dashboard</a>
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-menu">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">CS3103 Dashboard</a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar-menu">
+                <ul class="nav navbar-nav">
+                    <li><a href="/dashboard">Home</a></li>
+                    <li class="active"><a href="profile"><span class="glyphicon glyphicon-user"></span> {{ username }}'s Present Lists</a></li>
+                    <li><a href="/settings">Settings</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li style="margin-right: 15px;"><button type="submit" id="logout-btn" class="btn btn-danger navbar-btn">Logout</button></li>
+                </ul>
+            </div>
         </div>
-        <div class="collapse navbar-collapse" id="navbar-menu">
-        <ul class="nav navbar-nav">
-            <li><a href="/dashboard">Home</a></li>
-            <li class="active"><a href="profile"><span class="glyphicon glyphicon-user"></span> {{ username }}'s Present Lists</a></li>
-            <li><a href="/settings">Settings</a></li>
-        </ul>
-        <ul class="nav navbar-nav navbar-right">
-            <li style="margin-right: 15px;"><button type="submit" id="logout-btn" class="btn btn-danger navbar-btn">Logout</button></li>
-        </ul>
-        </div>
-    </div>
     </nav>
     
     <div class="container">
         <h1 class="text-center">Manage Your Present Lists</h1>
 
         <hr>
-    
+
         <button id="showCreateForm" class="btn mb-3">Create New List</button>
-    
+
+        <!-- Create Present List Form -->
         <div id="createPresentListContainer" class="mb-3" style="display: none;">
             <h3>Create New Present List</h3>
             <form id="createPresentListForm">
-            <label for="createListName" class="form-label">Present List Name:</label>
-            <input type="text" id="createListName" class="form-control" name="createListName" required>
-    
-            <label for="createOccasion" class="form-label">Occasion:</label>
-            <input type="text" id="createOccasion" class="form-control" name="createOccasion" required>
-    
-            <button type="submit" class="btn btn-primary">Create Present List</button>
-            <button type="button" id="cancelCreateForm" class="btn btn-secondary">Cancel</button>
+                <label for="createListName" class="form-label">Present List Name:</label>
+                <input type="text" id="createListName" class="form-control" name="createListName" required>
+
+                <label for="createOccasion" class="form-label">Occasion:</label>
+                <input type="text" id="createOccasion" class="form-control" name="createOccasion" required>
+
+                <button type="submit" class="btn btn-primary">Create Present List</button>
+                <button type="button" id="cancelCreateForm" class="btn btn-secondary">Cancel</button>
             </form>
             <p id="createListResponse"></p>
         </div>
-    
+        <!-- Modal for Adding a Present -->
+        <div id="addPresentModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addPresentModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addPresentModalLabel">Add a Present</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addPresentForm">
+                            <input type="hidden" id="presentListID" name="presentListID">
+                            
+                            <label for="presentName">Present Name:</label>
+                            <input type="text" id="presentName" class="form-control" name="presentName" required>
+
+                            <label for="presentDescription">Description:</label>
+                            <input type="text" id="presentDescription" class="form-control" name="description" required>
+
+                            <label for="presentPriority">Priority:</label>
+                            <select id="presentPriority" class="form-control" name="priority" required>
+                                <option value="1">High</option>
+                                <option value="2">Medium</option>
+                                <option value="3">Low</option>
+                            </select>
+
+                            <label for="presentStatus">Status:</label>
+                            <select id="presentStatus" class="form-control" name="status" required>
+                                <option value="false">Pending</option>
+                                <option value="true">Completed</option>
+                            </select>
+
+                            <button type="submit" class="btn btn-primary">Add Present</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Present List Details Form -->
+        <div id="updatePresentListFormContainer" style="display:none;">
+            <h3>Update Present List Details</h3>
+            <form id="updatePresentListForm">
+                <input type="hidden" id="updatePresentListId">
+                <label for="updatePresentListName">New Present List Name:</label>
+                <input type="text" id="updatePresentListName" class="form-control">
+
+                <label for="updateOccasion">New Occasion:</label>
+                <input type="text" id="updateOccasion" class="form-control">
+
+                <button type="submit" class="btn btn-primary">Update Present List</button>
+                <button type="button" id="cancelUpdateForm" class="btn btn-secondary">Cancel</button>
+            </form>
+            <p id="updateResponse"></p>
+        </div>
+
+        <!-- Modal to view presents list -->
+        <div id="viewPresentsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="viewPresentsModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewPresentsModalLabel">Present List</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Present List Details:</h6>
+                        <p id="presentListDetails"></p>
+                        <h6>Presents:</h6>
+                        <ul id="presentsList"></ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <div class="table-responsive">
             <table class="table table-bordered table-striped">
-            <thead class="table-dark">
-                <tr>
-                <th>Name</th>
-                <th>Occasion</th>
-                <th>Date Created</th>
-                <th>Actions</th>
-                <th>Actions</th>
-                <th>Actions</th>
-                <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="presents-table">
-                <!-- Presents will be inserted here dynamically -->
-            </tbody>
+                <thead class="table-dark">
+                    <tr>
+                        <th>Name</th>
+                        <th>Occasion</th>
+                        <th>Date Created</th>
+                        <th>Actions</th>
+                        <th>Actions</th>
+                        <th>Actions</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="presents-table">
+                    <!-- Presents will be inserted here dynamically -->
+                </tbody>
             </table>
         </div>
     </div>
@@ -83,7 +165,14 @@
             const cancelCreateButton = document.getElementById("cancelCreateForm");
             const createForm = document.getElementById("createPresentListForm");
             const responseMessage = document.getElementById("createListResponse");
-
+    
+            const updateFormContainer = document.getElementById("updatePresentListFormContainer");
+            const cancelUpdateButton = document.getElementById("cancelUpdateForm");
+            const updateForm = document.getElementById("updatePresentListForm");
+            const updateResponseMessage = document.getElementById("updateResponse");
+    
+            const addPresentForm = document.getElementById("addPresentForm"); // Fix: define the addPresentForm
+    
             function refreshPresents() {
                 fetch('/user/update', {
                     method: 'GET',
@@ -94,7 +183,7 @@
                 .then(data => {
                     if (data.status === 'success') {
                         const userId = data.data.userID;
-
+    
                         return fetch(`/user/${userId}/presentlist`, {
                             method: "GET",
                             headers: { "Content-Type": "application/json" },
@@ -108,57 +197,104 @@
                 .then(data => {
                     let tableBody = document.getElementById("presents-table");
                     tableBody.innerHTML = "";
-
+    
                     if (!data.present_lists || data.present_lists.length === 0) {
                         tableBody.innerHTML = "<tr><td colspan='4'>No presents found</td></tr>";
                         return;
                     }
-
+    
                     data.present_lists.forEach(present => {
-                        let row = `<tr>
+                        let row = `<tr id="present-${present.presentListID}">
                             <td>${present.name}</td>
                             <td>${present.occasion}</td>
                             <td>${present.dateCreated}</td>
-                            <td> <button onclick="viewList(${present.presentListID})">View List</button> </td>
-                            <td> <button onclick="updateList(${present.presentListID})">Change Details</button> </td>
-                            <td> <button onclick="addToList(${present.presentListID})">Add Present</button> </td>
-                            <td> <button class="btn btn-danger" onclick="deleteList(${present.presentListID})">Delete</button> </td>
+                            <td><button onclick="viewList(${present.presentListID})">View List</button></td>
+                            <td><button onclick="updateList(${present.presentListID})">Change Details</button></td>
+                            <td><button onclick="addToList(${present.presentListID})">Add Present</button></td>
+                            <td><button class="btn btn-danger" onclick="deleteList(${present.presentListID})">Delete</button></td>
                         </tr>`;
-
+    
                         tableBody.innerHTML += row;
                     });
                 })
                 .catch(error => console.error("Error:", error));
             }
-
+    
             // Call the function when the page loads
             refreshPresents();
-
+    
+            // Add Present Button
+            window.addToList = function (presentListID) {
+                // Show modal for adding present
+                document.getElementById('presentListID').value = presentListID; // Ensure correct ID is passed to modal
+                $('#addPresentModal').modal('show');
+            };
+    
+            // Handle Add Present form submission
+            addPresentForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+    
+                const presentListID = document.getElementById('presentListID').value;
+                const presentName = document.getElementById('presentName').value;
+                const description = document.getElementById('presentDescription').value;
+                const priority = document.getElementById('presentPriority').value;
+                const status = document.getElementById('presentStatus').value === "true";
+    
+                const presentData = {
+                    presentListID: presentListID,
+                    presentName: presentName,
+                    description: description,
+                    priority: priority,
+                    status: status
+                };
+    
+                fetch('/present', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(presentData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        $('#addPresentModal').modal('hide');
+                        refreshPresents(); // Refresh the present list
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("An error occurred while adding the present.");
+                });
+            });
+    
             // Show form when "Create New List" is clicked
             showCreateButton.addEventListener("click", function () {
                 createFormContainer.style.display = "block";
                 showCreateButton.style.display = "none";
             });
-
+    
             // Hide form when "Cancel" is clicked
             cancelCreateButton.addEventListener("click", function () {
                 createFormContainer.style.display = "none";
                 showCreateButton.style.display = "block";
                 responseMessage.textContent = "";
             });
-
-            // Handle form submission
+    
+            // Handle form submission for creating a new present list
             createForm.addEventListener("submit", function (event) {
                 event.preventDefault();
-
+    
                 const listName = document.getElementById('createListName').value;
                 const occasion = document.getElementById('createOccasion').value;
-
+    
                 const createData = {
                     name: listName,
                     occasion: occasion
                 };
-
+    
                 fetch('/presentlist', {
                     method: 'POST',
                     headers: {
@@ -172,7 +308,7 @@
                         responseMessage.textContent = "Present List Created Successfully!";
                         responseMessage.style.color = "green";
                         createForm.reset();
-
+    
                         setTimeout(() => {
                             createFormContainer.style.display = "none";
                             showCreateButton.style.display = "block";
@@ -189,77 +325,120 @@
                     responseMessage.style.color = "red";
                 });
             });
-
-            // Expose refreshPresents function globally so other functions can use it
-            window.refreshPresents = refreshPresents;
-        });
-
-
-        function deleteList(listId) {
-            if (!confirm(`Are you sure you want to delete present list ID ${listId}?`)) return;
-            
-            fetch(`/presentlist/${listId}`, { method: 'DELETE' })
+    
+            // Handle "Change Details" button click
+            window.updateList = function (listId) {
+                const listRow = document.querySelector(`#present-${listId}`);
+                const listName = listRow.children[0].innerText; // Get name from the row
+                const occasion = listRow.children[1].innerText; // Get occasion from the row
+    
+                document.getElementById('updatePresentListId').value = listId;
+                document.getElementById('updatePresentListName').value = listName;
+                document.getElementById('updateOccasion').value = occasion;
+    
+                updateFormContainer.style.display = "block";
+            };
+    
+            // Hide update form when "Cancel" is clicked
+            cancelUpdateButton.addEventListener("click", function () {
+                updateFormContainer.style.display = "none";
+            });
+    
+            // Handle form submission for updating present list details
+            updateForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+    
+                const listId = document.getElementById('updatePresentListId').value;
+                const newListName = document.getElementById('updatePresentListName').value;
+                const newOccasion = document.getElementById('updateOccasion').value;
+    
+                const updateData = {
+                    name: newListName,
+                    occasion: newOccasion
+                };
+    
+                fetch(`/presentlist/${listId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                })
                 .then(response => response.json())
                 .then(data => {
-                    alert(`Present list with ID ${listId} deleted successfully.`);
-                    refreshPresents(); // Refresh after deletion
+                    if (data.status === 'success') {
+                        updateResponseMessage.textContent = "Present list updated successfully!";
+                        updateResponseMessage.style.color = "green";
+                        refreshPresents(); // Refresh the list
+                        setTimeout(() => {
+                            updateFormContainer.style.display = "none";
+                        }, 1500);
+                    } else {
+                        updateResponseMessage.textContent = "Error updating present list.";
+                        updateResponseMessage.style.color = "red";
+                    }
                 })
                 .catch(error => {
-                    alert('Error deleting present list: ' + error.message);
+                    console.error("Error:", error);
+                    updateResponseMessage.textContent = "An error occurred. Please try again.";
+                    updateResponseMessage.style.color = "red";
                 });
-        }
-
-
-        document.getElementById('updatePresentListContentsForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const listId = document.getElementById('updateListId').value;
-            const addPresentName = document.getElementById('addPresentName').value;
-            const deletePresentName = document.getElementById('deletePresentName').value;
-
-            const updateData = {};
-            if (addPresentName) updateData.addPresent = addPresentName;
-            if (deletePresentName) updateData.deletePresent = deletePresentName;
-
-            fetch(`/presentlist/${listId}/contents`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updateData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('updateContentsResponse').innerText = 'Present list contents updated successfully.';
-            })
-            .catch(error => {
-                document.getElementById('updateContentsResponse').innerText = 'Error updating present list contents';
-                alert('Error updating present list contents: ' + error.message);
             });
+    
+            // Handle "View List" button click
+            window.viewList = function (listId) {
+                fetch(`/present/search?presentListID=${listId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.presents && data.presents.length > 0) {
+                        const presentsList = document.getElementById("presentsList");
+                        presentsList.innerHTML = ""; // Clear any existing presents in the list
+    
+                        data.presents.forEach(present => {
+                            const name = present.presentName || "No Name";
+                            const description = present.description || "No Description";
+                            const priority = present.priority !== undefined ? present.priority : "No Priority";
+                            const status = present.status !== undefined ? (present.status ? "Completed" : "Pending") : "No Status";
+    
+                            const listItem = document.createElement("li");
+                            listItem.textContent = `${name} - ${description} (Priority: ${priority}, Status: ${status})`;
+    
+                            presentsList.appendChild(listItem);
+                        });
+    
+                        const presentListDetails = document.getElementById("presentListDetails");
+                        presentListDetails.textContent = `List ID: ${listId}`;
+    
+                        $('#viewPresentsModal').modal('show');
+                    } else {
+                        alert('No presents found for this list.');
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("An error occurred while fetching the presents.");
+                });
+            };
+    
+            // Add delete functionality to delete present list
+            window.deleteList = function (listId) {
+                if (!confirm(`Are you sure you want to delete present list ID ${listId}?`)) return;
+    
+                fetch(`/presentlist/${listId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(`Present list with ID ${listId} deleted successfully.`);
+                        refreshPresents(); // Refresh after deletion
+                    })
+                    .catch(error => {
+                        alert('Error deleting present list: ' + error.message);
+                    });
+            };
+    
         });
-
-        document.getElementById('updatePresentListInfoForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const listId = document.getElementById('updatePresentListId').value;
-            const newListName = document.getElementById('updatePresentListName').value;
-            const newOccasion = document.getElementById('updateOccasion').value;
-
-            const updateData = {};
-            if (newListName) updateData.name = newListName;
-            if (newOccasion) updateData.occasion = newOccasion;
-
-            fetch(`/presentlist/${listId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updateData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('updateInfoResponse').innerText = 'Present list information updated successfully.';
-            })
-            .catch(error => {
-                document.getElementById('updateInfoResponse').innerText = 'Error updating present list information';
-                alert('Error updating present list information: ' + error.message);
-            });
-        });
-
     </script>
+
 </body>
 </html>
