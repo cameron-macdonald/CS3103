@@ -23,7 +23,6 @@ CREATE PROCEDURE getListByUserID(IN userIDIn INT, IN presentListIDIn INT)
 BEGIN
     SELECT * 
     FROM presentlists 
-    NATURAL JOIN users 
     WHERE presentListID = presentListIDIn AND userID = userIDIn;
 END //
 DELIMITER ;

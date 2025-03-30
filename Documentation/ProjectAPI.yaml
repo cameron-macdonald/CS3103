@@ -370,122 +370,6 @@ paths:
                   error:
                     type: string
                     example: "No matching users found"
-  /users/{userId}/validated-emails:
-    post:
-      summary: Add a validated email for a user
-      operationId: addValidatedEmail
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                emailAddress:
-                  type: string
-                  format: email
-                  example: "user@example.com"
-      responses:
-        '201':
-          description: Validated email added successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Validated email added successfully"
-        '400':
-          description: Bad request - Invalid input
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Invalid email format"
-        '401':
-          description: Unauthorized - Authentication required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unauthorized - Invalid or missing token"
-        '409':
-          description: Conflict - Email already validated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Email is already validated"
-    delete:
-      summary: Remove a validated email for a user
-      operationId: deleteValidatedEmail
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Validated email removed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Validated email removed successfully"
-        '400':
-          description: Bad request - Invalid input
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Invalid user ID"
-        '401':
-          description: Unauthorized - Authentication required
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Unauthorized - Invalid or missing token"
-        '404':
-          description: Not Found - Validated email does not exist
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "No validated email found for this user"
   /users/{userId}/present-lists:
     get:
       summary: Retrieve all present lists for a user
@@ -537,7 +421,7 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "No present lists found for the given user"
+                    example: "No present lists found for the given user" 
   /present-lists:
     get:
       summary: Retrieve all present lists
@@ -1129,64 +1013,6 @@ paths:
                   error:
                     type: string
                     example: "No presents found"
-  /users/{userId}/validated-email:
-    post:
-      summary: Add a validated email after successful verification
-      operationId: addValidatedEmailAddress
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                emailAddress:
-                  type: string
-                  format: email
-                  example: "user@example.com"
-      responses:
-        '201':
-          description: Email successfully validated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Email validated successfully"
-        '400':
-          description: Bad request - Invalid input
-        '404':
-          description: User not found
-    delete:
-      summary: Remove a validated email
-      operationId: deleteValidatedEmailAddress
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Email validation removed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Validated email removed"
-        '404':
-          description: User or email not found
   /verification-tokens:
     post:
       summary: Create a new verification token to send
@@ -1230,13 +1056,6 @@ paths:
           description: Invalid or expired token
         '404':
           description: User or token not found
-  /verification-tokens/expired:
-    delete:
-      summary: Delete expired verification tokens
-      operationId: deleteExpiredTokens
-      responses:
-        '200':
-          description: Expired tokens deleted
   /auth/login:
     post:
       summary: Authenticate user and start a session

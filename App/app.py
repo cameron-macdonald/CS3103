@@ -295,21 +295,21 @@ class PresentList(Resource):
         if not list_id:
             abort(400, message="Present List ID is required")
 
-        user_id = session['user_id']  # Get the user_id from the session
+        user_id = session['user_id'] 
 
         # Check if the present list belongs to the logged-in user
-        sqlProc = 'getListByUserID'  # Procedure to check ownership
+        sqlProc = 'getListByUserID' 
         sqlArgs = [user_id, list_id]
 
         ownership_check = db_access(sqlProc, sqlArgs)
 
         if not ownership_check:
-            abort(403, message="Forbidden: You can only delete your own present lists")  # Move outside try-except
+            abort(403, message="Forbidden: You can only delete your own present lists")
 
         # Proceed with deletion if the list belongs to the user
         try:
-            sqlProc = 'deleteList'  # Stored procedure for deletion
-            sqlArgs = [list_id]  # Only list_id is needed
+            sqlProc = 'deleteList'
+            sqlArgs = [user_id, list_id]
 
             result = db_access(sqlProc, sqlArgs)
 
@@ -321,7 +321,6 @@ class PresentList(Resource):
         except Exception as e:
             print(f"Error deleting list: {str(e)}")  # Log the actual error
             abort(500, message="Error deleting present list")
-
 
     # Update (Replace) Present List Information
     def put(self, list_id):

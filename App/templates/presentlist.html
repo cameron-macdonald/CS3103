@@ -33,206 +33,182 @@
         </div>
     </div>
     </nav>
-      
+    
+    <div class="container">
+        <h1 class="text-center">Manage Your Present Lists</h1>
 
-    <h1>Manage Your Present Lists</h1>
-
-
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Present Name</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Priority</th>
-            </tr>
-        </thead>
-        <tbody id="presents-table">
-            <!-- Presents will be inserted here dynamically -->
-        </tbody>
-    </table>
-
-
-    <div class="mb-3">
-        <h2>View Present Lists</h2>
-        <button id="viewPresentListsBtn" class="btn btn-primary">View Present Lists</button>
-        <ul id="presentLists"></ul>
-    </div>
-
-    <div class="mb-3">
-        <h2>Create New Present List</h2>
-        <form id="createPresentListForm">
+        <hr>
+    
+        <button id="showCreateForm" class="btn mb-3">Create New List</button>
+    
+        <div id="createPresentListContainer" class="mb-3" style="display: none;">
+            <h3>Create New Present List</h3>
+            <form id="createPresentListForm">
             <label for="createListName" class="form-label">Present List Name:</label>
             <input type="text" id="createListName" class="form-control" name="createListName" required>
-
+    
             <label for="createOccasion" class="form-label">Occasion:</label>
             <input type="text" id="createOccasion" class="form-control" name="createOccasion" required>
-
-            <button type="submit" class="btn btn-primary">Create Present List</button>
-        </form>
-        <p id="createListResponse"></p>
-    </div>
     
-    <div class="mb-3">
-        <h2>Delete Present List by ID</h2>
-        <form id="deletePresentListForm">
-            <label for="deletePresentListId" class="form-label">Present List ID:</label>
-            <input type="text" id="deletePresentListId" class="form-control" name="deletePresentListId" required>
-            <button type="submit" class="btn btn-primary">Delete Present List</button>
-        </form>
-        <p id="deleteListResponse"></p>
-    </div>
-
-    <div class="mb-3">
-        <h2>Update Present List Contents</h2>
-        <form id="updatePresentListContentsForm">
-            <label for="updateListId" class="form-label">Present List ID:</label>
-            <input type="text" id="updateListId" class="form-control" name="updateListId" required>
-            
-            <label for="addPresentName" class="form-label">Add Present (Name):</label>
-            <input type="text" id="addPresentName" class="form-control" name="addPresentName">
-            
-            <label for="deletePresentName" class="form-label">Delete Present (Name):</label>
-            <input type="text" id="deletePresentName" class="form-control" name="deletePresentName">
-            
-            <button type="submit" class="btn btn-primary">Update Present List Contents</button>
-        </form>
-        <p id="updateContentsResponse"></p>
-    </div>
-
-    <div class="mb-3">
-        <h2>Update Present List Information</h2>
-        <form id="updatePresentListInfoForm">
-            <label for="updatePresentListId" class="form-label">Present List ID:</label>
-            <input type="text" id="updatePresentListId" class="form-control" name="updatePresentListId" required>
-            
-            <label for="updatePresentListName" class="form-label">New Present List Name (optional):</label>
-            <input type="text" id="updatePresentListName" class="form-control" name="updatePresentListName">
-            
-            <label for="updateOccasion" class="form-label">New Occasion (optional):</label>
-            <input type="text" id="updateOccasion" class="form-control" name="updateOccasion">
-            
-            <button type="submit" class="btn btn-primary">Update Present List Information</button>
-        </form>
-        <p id="updateInfoResponse"></p>
+            <button type="submit" class="btn btn-primary">Create Present List</button>
+            <button type="button" id="cancelCreateForm" class="btn btn-secondary">Cancel</button>
+            </form>
+            <p id="createListResponse"></p>
+        </div>
+    
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                <th>Name</th>
+                <th>Occasion</th>
+                <th>Date Created</th>
+                <th>Actions</th>
+                <th>Actions</th>
+                <th>Actions</th>
+                <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="presents-table">
+                <!-- Presents will be inserted here dynamically -->
+            </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
-        function loadPresents() {
-            const pathParts = window.location.pathname.split("/");
-            const list_id = pathParts[pathParts.length - 1]; 
+        document.addEventListener("DOMContentLoaded", function () {
+            const createFormContainer = document.getElementById("createPresentListContainer");
+            const showCreateButton = document.getElementById("showCreateForm");
+            const cancelCreateButton = document.getElementById("cancelCreateForm");
+            const createForm = document.getElementById("createPresentListForm");
+            const responseMessage = document.getElementById("createListResponse");
 
-            fetch(`/present/${list_id}`, {
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include"
-            })
-            .then(response => response.json())
-            .then(data => {
-              let tableBody = document.getElementById("presents-table");
-            tableBody.innerHTML = "";
+            function refreshPresents() {
+                fetch('/user/update', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const userId = data.data.userID;
 
-            data.forEach(present => {
-                let row = `<tr>
-                    <td>${present.presentID}</td>
-                    <td>${present.presentName}</td>
-                    <td>${present.description}</td>
-                    <td>${present.status === 1 ? "Received" : "Not Received"}</td>
-                    <td>${present.priority}</td>
-                </tr>`;
-                tableBody.innerHTML += row;
-            });
-        })
-            .catch(error => console.error("Error fetching presents:", error));
-        }
-
-        // Load data when page loads
-        window.onload = loadPresents;
-
-
-        document.getElementById('viewPresentListsBtn').addEventListener('click', function() {
-            fetch('/presentlist')
-            .then(response => {
-                console.log('Response status:', response.status);  // Log the response status
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();  // Get the response as text for debugging
-            })
-            .then(data => {
-                console.log('Response from server:', data);  // Log the response content
-                try {
-                    const jsonData = JSON.parse(data);  // Attempt to parse the response as JSON
-                    if (Array.isArray(jsonData)) {
-                        const listContainer = document.getElementById('presentLists');
-                        listContainer.innerHTML = '';
-                        jsonData.forEach(list => {
-                            const listItem = document.createElement('li');
-                            listItem.textContent = `${list.name} - ${list.occasion} (ID: ${list.id})`;
-                            listContainer.appendChild(listItem);
+                        return fetch(`/user/${userId}/presentlist`, {
+                            method: "GET",
+                            headers: { "Content-Type": "application/json" },
+                            credentials: "include"
                         });
                     } else {
-                        alert('No present lists found or an error occurred.');
+                        throw new Error("Failed to fetch user data");
                     }
-                } catch (error) {
-                    alert('Error parsing JSON: ' + error.message);
-                }
-            })
-            .catch(error => alert('Error fetching present lists: ' + error.message));
-        });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    let tableBody = document.getElementById("presents-table");
+                    tableBody.innerHTML = "";
 
+                    if (!data.present_lists || data.present_lists.length === 0) {
+                        tableBody.innerHTML = "<tr><td colspan='4'>No presents found</td></tr>";
+                        return;
+                    }
 
+                    data.present_lists.forEach(present => {
+                        let row = `<tr>
+                            <td>${present.name}</td>
+                            <td>${present.occasion}</td>
+                            <td>${present.dateCreated}</td>
+                            <td> <button onclick="viewList(${present.presentListID})">View List</button> </td>
+                            <td> <button onclick="updateList(${present.presentListID})">Change Details</button> </td>
+                            <td> <button onclick="addToList(${present.presentListID})">Add Present</button> </td>
+                            <td> <button class="btn btn-danger" onclick="deleteList(${present.presentListID})">Delete</button> </td>
+                        </tr>`;
 
-        document.getElementById('createPresentListForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error("Error:", error));
+            }
 
-            const listName = document.getElementById('createListName').value;
-            const occasion = document.getElementById('createOccasion').value;
+            // Call the function when the page loads
+            refreshPresents();
 
-            const createData = {
-                name: listName,
-                occasion: occasion
-            };
-
-            fetch('/presentlist', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(createData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Response from server:", data); // Debugging log
-
-                if (data.status === 'success') {
-                    document.getElementById('createListResponse').innerText = `Present list "${listName}" created successfully.`;
-                } else {
-                    document.getElementById('createListResponse').innerText = `Error: ${data.message}`;
-                    alert('Error creating present list: ' + data.message);
-                }
-            })
-            .catch(error => {
-                document.getElementById('createListResponse').innerText = 'Error creating present list';
-                alert('Error creating present list: ' + error.message);
+            // Show form when "Create New List" is clicked
+            showCreateButton.addEventListener("click", function () {
+                createFormContainer.style.display = "block";
+                showCreateButton.style.display = "none";
             });
+
+            // Hide form when "Cancel" is clicked
+            cancelCreateButton.addEventListener("click", function () {
+                createFormContainer.style.display = "none";
+                showCreateButton.style.display = "block";
+                responseMessage.textContent = "";
+            });
+
+            // Handle form submission
+            createForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+
+                const listName = document.getElementById('createListName').value;
+                const occasion = document.getElementById('createOccasion').value;
+
+                const createData = {
+                    name: listName,
+                    occasion: occasion
+                };
+
+                fetch('/presentlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(createData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        responseMessage.textContent = "Present List Created Successfully!";
+                        responseMessage.style.color = "green";
+                        createForm.reset();
+
+                        setTimeout(() => {
+                            createFormContainer.style.display = "none";
+                            showCreateButton.style.display = "block";
+                            refreshPresents(); // Refresh the list
+                        }, 1500);
+                    } else {
+                        responseMessage.textContent = "Error: " + data.message;
+                        responseMessage.style.color = "red";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    responseMessage.textContent = "An error occurred. Please try again.";
+                    responseMessage.style.color = "red";
+                });
+            });
+
+            // Expose refreshPresents function globally so other functions can use it
+            window.refreshPresents = refreshPresents;
         });
 
 
-        document.getElementById('deletePresentListForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const listId = document.getElementById('deletePresentListId').value;
+        function deleteList(listId) {
+            if (!confirm(`Are you sure you want to delete present list ID ${listId}?`)) return;
+            
             fetch(`/presentlist/${listId}`, { method: 'DELETE' })
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('deleteListResponse').innerText = `Present list with ID ${listId} deleted successfully.`;
+                    alert(`Present list with ID ${listId} deleted successfully.`);
+                    refreshPresents(); // Refresh after deletion
                 })
                 .catch(error => {
-                    document.getElementById('deleteListResponse').innerText = 'Error deleting present list';
                     alert('Error deleting present list: ' + error.message);
                 });
-        });
+        }
+
 
         document.getElementById('updatePresentListContentsForm').addEventListener('submit', function(event) {
             event.preventDefault();
