@@ -50,7 +50,7 @@
             alert("Login successful!");
             window.location.href = "/dashboard"; // Redirect if needed
           } else {
-            alert("Login failed!");
+            alert("Registration failed: " + data.message);
           }
         })
         .catch(error => console.error("Error:", error));

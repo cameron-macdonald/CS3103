@@ -72,10 +72,11 @@ DELIMITER ;
 DELIMITER //
 DROP PROCEDURE IF EXISTS updateUser //
     
-CREATE PROCEDURE updateUser(IN userIDIn INT, IN firstNameIn VARCHAR(255), IN lastNameIn VARCHAR(255), IN emailAdressIn VARCHAR(255), IN passwordIn VARCHAR(255))
+CREATE PROCEDURE updateUser(IN userIDIn INT, IN usernameIn VARCHAR(255), IN firstNameIn VARCHAR(255), IN lastNameIn VARCHAR(255), IN emailAdressIn VARCHAR(255), IN passwordIn VARCHAR(255))
 BEGIN
     UPDATE users
-    SET firstName = firstNameIn,
+    SET username = usernameIn,
+        firstName = firstNameIn,
         lastName = lastNameIn,
         emailAdress = emailAdressIn,
         password = passwordIn

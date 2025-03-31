@@ -78,6 +78,11 @@
                 <button type="submit" class="btn btn-primary">Update Information</button>
             </div>
         </form>
+
+        <hr>
+
+        <button type="submit" id="delete-account-btn" class="btn btn-danger navbar-btn">Delete Account</button>
+
     </div>
     
     <script>
@@ -182,7 +187,7 @@
                     data[key] = value;
                 });
     
-                fetch('/user/update', {
+                fetch('/user', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -201,6 +206,28 @@
                     console.error('Error:', error);
                     alert('Error updating information');
                 });
+            });
+
+            document.getElementById("delete-account-btn").addEventListener("click", function () {
+                if (!confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+                    return; // Stop if user cancels
+                }
+
+                fetch(`/user/${userId}`, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include"
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        alert("Your account has been deleted.");
+                        window.location.href = "/login"; // Redirect to login page after deletion
+                    } else {
+                        alert("Account deletion failed: " + data.message);
+                    }
+                })
+                .catch(error => console.error("Error deleting account:", error));
             });
         });
 
@@ -221,6 +248,7 @@
             })
             .catch(error => console.error("Error:", error));
         });
+
 
     </script>    
     

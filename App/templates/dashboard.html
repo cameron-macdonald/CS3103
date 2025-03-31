@@ -29,7 +29,8 @@
           <li><a href="/settings">Settings</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
-          <li style="margin-right: 15px;"><button type="submit" id="logout-btn" class="btn btn-danger navbar-btn">Logout</button></li>
+          <li style="margin-right: 15px;"><button type="submit" id="logout-btn"
+              class="btn btn-danger navbar-btn">Logout</button></li>
         </ul>
       </div>
     </div>
@@ -41,57 +42,140 @@
 
     <table class="table table-bordered">
       <thead>
-          <tr>
-              <th>Name</th>
-              <th>Occasion</th>
-              <th>Date Created</th>
-              <th>View List</th>
-          </tr>
+        <tr>
+          <th>Name</th>
+          <th>Occasion</th>
+          <th>Date Created</th>
+          <th>View List</th>
+        </tr>
       </thead>
       <tbody id="present-lists-table">
-          <!-- Data will be inserted here -->
+        <!-- Data will be inserted here -->
       </tbody>
-  </table>
+    </table>
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="presentListModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-lg"> <!-- Make the modal larger -->
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Present List Details</h5>
+          </div>
+          <div class="modal-body">
+            <p><strong>Name:</strong> <span id="modalName"></span></p>
+            <p><strong>Occasion:</strong> <span id="modalOccasion"></span></p>
+            <p><strong>Date Created:</strong> <span id="modalDate"></span></p>
+
+            <!-- Presents Table -->
+            <h6>Presents in this List:</h6>
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Present Name</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody id="modalPresentsTable">
+                <tr>
+                  <td colspan="4">No presents found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
 
   <script>
-function loadPresentLists() {
-        fetch("/presentlist", {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include"
-        })
+    function loadPresentLists() {
+      fetch("/presentlist", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      })
         .then(response => response.json())
         .then(data => {
-            let tableBody = document.getElementById("present-lists-table");
-            tableBody.innerHTML = ""; // Clear existing data
+          let tableBody = document.getElementById("present-lists-table");
+          tableBody.innerHTML = ""; // Clear existing data
 
-            data.forEach(list => {
-                let row = `<tr>
-                    <td>${list.name}</td>
-                    <td>${list.occasion}</td>
-                    <td>${list.dateCreated}</td>
-                    <td>
-                        <button class="btn btn-primary view-list-btn" data-id="${list.presentListID}">
-                            View List
-                        </button>
-                    </td>
-                </tr>`;
-                tableBody.innerHTML += row;
-            });
+          data.forEach(list => {
+            let row = `<tr>
+                <td>${list.name}</td>
+                <td>${list.occasion}</td>
+                <td>${list.dateCreated}</td>
+                <td>
+                    <button class="btn btn-primary view-list-btn" 
+                            data-id="${list.presentListID}" 
+                            data-name="${list.name}" 
+                            data-occasion="${list.occasion}" 
+                            data-date="${list.dateCreated}">
+                        View List
+                    </button>
+                </td>
+            </tr>`;
+            tableBody.innerHTML += row;
+          });
 
-            // Attach event listeners to the buttons after table updates
-            document.querySelectorAll(".view-list-btn").forEach(button => {
-                button.addEventListener("click", function() {
-                    let listId = this.getAttribute("data-id");
-                    window.location.href = `/presentlist/${listId}`;  // Redirect to view the list
-                });
+          // Attach event listeners to the buttons after table updates
+          document.querySelectorAll(".view-list-btn").forEach(button => {
+            button.addEventListener("click", function () {
+              let listId = this.getAttribute("data-id");
+              let name = this.getAttribute("data-name");
+              let occasion = this.getAttribute("data-occasion");
+              let date = this.getAttribute("data-date");
+
+              // Update modal content
+              document.getElementById("modalName").textContent = name;
+              document.getElementById("modalOccasion").textContent = occasion;
+              document.getElementById("modalDate").textContent = date;
+
+              // Fetch presents for the selected list
+              fetch(`/present/search?presentListID=${listId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+              })
+                .then(response => response.json())
+                .then(data => {
+                  let presents = data.presents; // Extracting presents array
+                  let presentsTable = document.getElementById("modalPresentsTable");
+                  presentsTable.innerHTML = ""; // Clear previous data
+
+                  if (presents.length > 0) {
+                    presents.forEach(present => {
+                      let statusText = present.status === 1 ? "Received" : "Not Received";
+                      let row = `<tr>
+                        <td>${present.presentName}</td>
+                        <td>${present.priority}</td>
+                        <td>${statusText}</td>
+                        <td>${present.description}</td>
+                    </tr>`;
+                      presentsTable.innerHTML += row;
+                    });
+                  } else {
+                    presentsTable.innerHTML = `<tr><td colspan="4">No presents found.</td></tr>`;
+                  }
+                })
+                .catch(error => console.error("Error fetching presents:", error));
+
+              // SHOW THE MODAL (Bootstrap 3 syntax)
+              $("#presentListModal").modal("show");
             });
+          });
+
 
         })
         .catch(error => console.error("Error fetching present lists:", error));
     }
+
+
 
     // Load data when page loads
     window.onload = loadPresentLists;

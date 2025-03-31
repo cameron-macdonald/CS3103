@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import sys
 from flask import Flask, jsonify, abort, request, make_response, session
 from flask_restful import reqparse, abort, Resource, Api
@@ -77,35 +78,46 @@ def not_found(error):
 
 class User(Resource):
     def post(self):
-        if not request.json or 'email' not in request.json or 'password' not in request.json:
-            abort(400, message="Missing required fields")  # Bad request
+        data = request.json
 
-        # Extract fields from JSON request
-        email = request.json.get('email')
-        first = request.json.get('first')
-        last = request.json.get('last')
-        username = request.json.get('username')
-        password = request.json.get('password')
+        # Check if request contains required fields
+        if not data or "email" not in data or "password" not in data:
+            abort(400, message="Missing required fields")
 
-        # Hash the password
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        email = data.get("email").strip()
+        first = data.get("first", "").strip()
+        last = data.get("last", "").strip()
+        username = data.get("username", "").strip()
+        password = data.get("password").strip()
 
-        sqlProc = 'addUser'
-        sqlArgs = [email, first, last, username, hashed_password]  # Store the hashed password
+        if not is_valid_input(first) or not is_valid_input(last) or not is_valid_input(username):
+            abort(400, message="Invalid characters in name or username.")
+
+        if not is_valid_email(email):
+            abort(400, message="Invalid email format")
+
+        if not is_strong_password(password):
+            abort(400, message="Password must be at least 8 characters, contain an uppercase, lowercase, digit, and special character")
+
+        # Hash the password securely
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+        sqlProc = "addUser"
+        sqlArgs = [email, first, last, username, hashed_password]
 
         try:
             result = db_access(sqlProc, sqlArgs)  
             user_id = result[0]["id"]
 
-            #Send all the email verification stuff
-            response_data = generate_verification_token(user_id)  # Returns a dictionary
-            verification_token = response_data.get("token")  # Extract token    
+            # Send email verification
+            response_data = generate_verification_token(user_id)
+            verification_token = response_data.get("token")
             verification_link = f"https://cs3103.cs.unb.ca:8013/verification-token/verify?userId={user_id}&token={verification_token}"
             send_verification_email(email, verification_link)
 
             return make_response(jsonify({"status": "success", "user_id": user_id}), 201)
         except Exception as e:
-            abort(500, message="Error: please try again")  # Catch any other errors
+            abort(500, message="Error: please try again")
 	
     def get(self, id=None):
         if id is None:
@@ -157,11 +169,23 @@ class User(Resource):
 
         # Get the data from the request
         user_id = session['user_id']
+        username = request.json.get('username')
         first_name = request.json.get('first_name')
         last_name = request.json.get('last_name')
         email = request.json.get('email')
         old_password = request.json.get('old_password')
         new_password = request.json.get('new_password')
+
+
+        if not is_valid_input(first_name) or not is_valid_input(last_name) or not is_valid_input(username):
+            abort(400, message="Invalid characters in name or username.")
+
+        if not is_valid_email(email):
+            abort(400, message="Invalid email format")
+
+        if not is_strong_password(new_password):
+            abort(400, message="New password must be at least 8 characters, contain an uppercase, lowercase, digit, and special character")
+
 
         # Fetch the user's current hashed password from the database
         sqlProc = 'getUserById'  # Assuming you have a stored procedure that gets a user by ID
@@ -186,7 +210,7 @@ class User(Resource):
 
             # Update the user's information
             sqlProc = 'updateUser'  # Assuming you have a stored procedure for updating user
-            sqlArgs = [user_id, first_name, last_name, email, new_hashed_password]
+            sqlArgs = [user_id, username, first_name, last_name, email, new_hashed_password]
 
             db_access(sqlProc, sqlArgs)
 
@@ -272,6 +296,10 @@ class PresentList(Resource):
         occasion = request.json.get('occasion')
         user_id = session['user_id']  # Get the user_id from the session
 
+
+        if not is_valid_input(name) or not is_valid_input(occasion):
+            abort(400, message="Invalid characters in name or occasion.")
+
         sqlProc = 'addList'  # Updated stored procedure for adding the list with userID
         sqlArgs = [user_id, name, occasion]  # Pass the user_id to associate with the present list
 
@@ -334,6 +362,10 @@ class PresentList(Resource):
         new_name = request.json.get('name')
         new_occasion = request.json.get('occasion')
 
+
+        if not is_valid_input(new_name) or not is_valid_input(new_occasion):
+            abort(400, message="Invalid characters in the new name or occasion.")
+
         if not new_name or not new_occasion:
             abort(400, message="Both 'name' and 'occasion' fields are required")
 
@@ -383,6 +415,10 @@ class Login(Resource):
         entered_password = request.json.get('password')
         date_created = request.json.get('dateCreated', None)
 		
+
+        if not is_valid_input(username) or not is_valid_input(entered_password):
+            abort(400, message="Invalid characters in username or password")
+
         # Retrieve stored hashed password from the database
         sqlProc = 'getUsersBy'  
         sqlArgs = [
@@ -578,20 +614,6 @@ class PresentSearch(Resource):
         except Exception as e:
             abort(500, message="Error searching presents: " + str(e))
 
-
-    # def get(self, list_id):
-    #     if 'user_id' not in session:
-    #         abort(401, message="Unauthorized: Please log in")
-
-    #     sqlProc = 'getPresentsByListID'
-    #     sqlArgs = [list_id]
-
-    #     try:
-    #         result = db_access(sqlProc, sqlArgs)
-    #         return make_response(jsonify(result), 200) if result else make_response(jsonify([]), 200)
-    #     except Exception as e:
-    #         abort(500, message=str(e))
-
 class VerificationToken(Resource):
     def get(self, id=None):
         if not id:
@@ -685,6 +707,26 @@ def send_verification_email(to_email, verification_link):
         print("Verification email sent successfully!")
     except Exception as e:
         print(f"Failed to send email: {e}")
+
+def is_valid_email(email):
+    """ Validate email format using regex """
+    email_regex = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+    return re.match(email_regex, email) is not None
+
+def is_strong_password(password):
+    """ Enforce strong password: 8+ chars, uppercase, lowercase, digit, special char """
+    return (
+        len(password) >= 8 and
+        any(c.isupper() for c in password) and
+        any(c.islower() for c in password) and
+        any(c.isdigit() for c in password) and
+        any(c in "!@#$%^&*()-_+=" for c in password)
+    )
+
+def is_valid_input(value):
+    """Allow only letters, numbers, underscores, spaces, and specific special characters: +=!$#&"""
+    return bool(re.fullmatch(r'[\w\s+=!$#&]+', value))  # Blocks `<script>`, `-/<>`, etc.
+
 
 ####################################################################################
 #
