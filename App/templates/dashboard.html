@@ -40,6 +40,12 @@
   <div class="container">
     <h2 class="mt-5">Welcome, {{ username }} to the CS3103 Present Registery!</h2>
 
+    <input type="text" id="name" placeholder="Name">
+    <input type="text" id="occasion" placeholder="Occasion">
+    <input type="date" id="dateCreated" placeholder="Date Created">
+    <button onclick="searchPresents()">Search</button>
+    <div id="results"></div>
+
     <table class="table table-bordered">
       <thead>
         <tr>
@@ -94,18 +100,73 @@
   </div>
 
   <script>
-    function loadPresentLists() {
-      fetch("/presentlist", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include"
-      })
-        .then(response => response.json())
-        .then(data => {
-          let tableBody = document.getElementById("present-lists-table");
-          tableBody.innerHTML = ""; // Clear existing data
+function attachViewListEventListeners() {
+    document.querySelectorAll(".view-list-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            let listId = this.getAttribute("data-id");
+            let name = this.getAttribute("data-name");
+            let occasion = this.getAttribute("data-occasion");
+            let date = this.getAttribute("data-date");
 
-          data.forEach(list => {
+            // Update modal content
+            document.getElementById("modalName").textContent = name;
+            document.getElementById("modalOccasion").textContent = occasion;
+            document.getElementById("modalDate").textContent = date;
+
+            // Fetch presents for the selected list
+            fetch(`/present/search?presentListID=${listId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    let presents = data.presents;
+                    let presentsTable = document.getElementById("modalPresentsTable");
+                    presentsTable.innerHTML = ""; // Clear previous data
+
+                    if (presents.length > 0) {
+                        presents.forEach(present => {
+                            let statusText = present.status === 1 ? "Received" : "Not Received";
+                            let row = `<tr>
+                                <td>${present.presentName}</td>
+                                <td>${present.priority}</td>
+                                <td>${statusText}</td>
+                                <td>${present.description}</td>
+                            </tr>`;
+                            presentsTable.innerHTML += row;
+                        });
+                    } else {
+                        presentsTable.innerHTML = `<tr><td colspan="4">No presents found.</td></tr>`;
+                    }
+                })
+                .catch(error => console.error("Error fetching presents:", error));
+
+            // SHOW THE MODAL (Bootstrap 3 syntax)
+            $("#presentListModal").modal("show");
+        });
+    });
+}
+
+async function loadPresentLists() {
+    try {
+        const response = await fetch("/presentlist", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include"
+        });
+        const data = await response.json();
+        const presentLists = data.present_lists;
+
+        if (!Array.isArray(presentLists)) {
+            console.error("Expected an array but got:", presentLists);
+            return;
+        }
+
+        const tableBody = document.getElementById("present-lists-table");
+        tableBody.innerHTML = ""; // Clear existing data
+
+        presentLists.forEach(list => {
             let row = `<tr>
                 <td>${list.name}</td>
                 <td>${list.occasion}</td>
@@ -121,64 +182,65 @@
                 </td>
             </tr>`;
             tableBody.innerHTML += row;
-          });
+        });
 
-          // Attach event listeners to the buttons after table updates
-          document.querySelectorAll(".view-list-btn").forEach(button => {
-            button.addEventListener("click", function () {
-              let listId = this.getAttribute("data-id");
-              let name = this.getAttribute("data-name");
-              let occasion = this.getAttribute("data-occasion");
-              let date = this.getAttribute("data-date");
-
-              // Update modal content
-              document.getElementById("modalName").textContent = name;
-              document.getElementById("modalOccasion").textContent = occasion;
-              document.getElementById("modalDate").textContent = date;
-
-              // Fetch presents for the selected list
-              fetch(`/present/search?presentListID=${listId}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
-              })
-                .then(response => response.json())
-                .then(data => {
-                  let presents = data.presents; // Extracting presents array
-                  let presentsTable = document.getElementById("modalPresentsTable");
-                  presentsTable.innerHTML = ""; // Clear previous data
-
-                  if (presents.length > 0) {
-                    presents.forEach(present => {
-                      let statusText = present.status === 1 ? "Received" : "Not Received";
-                      let row = `<tr>
-                        <td>${present.presentName}</td>
-                        <td>${present.priority}</td>
-                        <td>${statusText}</td>
-                        <td>${present.description}</td>
-                    </tr>`;
-                      presentsTable.innerHTML += row;
-                    });
-                  } else {
-                    presentsTable.innerHTML = `<tr><td colspan="4">No presents found.</td></tr>`;
-                  }
-                })
-                .catch(error => console.error("Error fetching presents:", error));
-
-              // SHOW THE MODAL (Bootstrap 3 syntax)
-              $("#presentListModal").modal("show");
-            });
-          });
-
-
-        })
-        .catch(error => console.error("Error fetching present lists:", error));
+        // Reattach event listeners after table update
+        attachViewListEventListeners();
+    } catch (error) {
+        console.error("Error fetching present lists:", error);
     }
+}
 
+async function searchPresents() {
+    const name = document.getElementById('name').value;
+    const occasion = document.getElementById('occasion').value;
+    const dateCreated = document.getElementById('dateCreated').value;
+    
+    const params = new URLSearchParams();
+    if (name) params.append('name', name);
+    if (occasion) params.append('occasion', occasion);
+    if (dateCreated) params.append('dateCreated', dateCreated);
 
+    try {
+        const response = await fetch(`/presentlist/search?${params.toString()}`);
+        const data = await response.json();
+        const presentLists = data.present_lists;
 
-    // Load data when page loads
-    window.onload = loadPresentLists;
+        if (!Array.isArray(presentLists)) {
+            console.error("Expected an array but got:", presentLists);
+            return;
+        }
+
+        const tableBody = document.getElementById("present-lists-table");
+        tableBody.innerHTML = ""; // Clear existing data
+
+        presentLists.forEach(list => {
+            let row = `<tr>
+                <td>${list.name}</td>
+                <td>${list.occasion}</td>
+                <td>${list.dateCreated}</td>
+                <td>
+                    <button class="btn btn-primary view-list-btn" 
+                            data-id="${list.presentListID}" 
+                            data-name="${list.name}" 
+                            data-occasion="${list.occasion}" 
+                            data-date="${list.dateCreated}">
+                        View List
+                    </button>
+                </td>
+            </tr>`;
+            tableBody.innerHTML += row;
+        });
+
+        // Reattach event listeners after search results update the table
+        attachViewListEventListeners();
+    } catch (error) {
+        console.error("Error fetching present lists:", error);
+    }
+}
+
+// Load data when page loads
+window.onload = loadPresentLists;
 
 
     document.getElementById("logout-btn").addEventListener("click", function (event) {
@@ -198,6 +260,7 @@
         })
         .catch(error => console.error("Error:", error));
     });
+
   </script>
 
 </body>
